@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Heart } from 'lucide-react'
 import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
 import { formatUSD } from '../services/priceEstimate.js'
-import { getCarImageUrl } from '../services/imaginStudio.js'
+import { getVehicleImageUrl } from '../services/imaginStudio.js'
 
 function getFlavorBadge(vehicle) {
   if (vehicle.isCollector) return 'Colección'
@@ -23,9 +23,8 @@ export default function VehicleCard({ vehicle, onOpenVehicle }) {
   const [saved, setSaved] = useState(false)
   const [imageFailed, setImageFailed] = useState(false)
   const isComparing = compareIds.includes(vehicle.id)
-  const isLive = vehicle.source === 'live'
   const flavorBadge = getFlavorBadge(vehicle)
-  const imageUrl = getCarImageUrl(vehicle.make, vehicle.model)
+  const imageUrl = getVehicleImageUrl(vehicle)
 
   return (
     <article className="vehicle-card hairline">
@@ -45,10 +44,6 @@ export default function VehicleCard({ vehicle, onOpenVehicle }) {
             <span className="font-serif">{vehicle.make}</span>
           </div>
         )}
-        <span className={`vehicle-card__badge ${isLive ? 'is-live' : 'is-estimated'}`}>
-          <span className={`status-dot ${isLive ? 'status-dot--live' : 'status-dot--estimated'}`} />
-          {isLive ? 'Anuncio real' : 'Precio estimado'}
-        </span>
         {flavorBadge && <span className={`vehicle-card__flavor ${vehicle.isCollector ? 'is-collector' : ''}`}>{flavorBadge}</span>}
 
         <button

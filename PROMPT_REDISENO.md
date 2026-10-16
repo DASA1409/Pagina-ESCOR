@@ -9,7 +9,7 @@ Tengo un proyecto React 19 + Vite llamado **ESCOR**: un marketplace de compra y 
 ## Lo que NO debes tocar (lógica ya funcional, no reescribir)
 
 - `server/index.js` — proxy Node hacia OpenAI/Gemini (chat) y hacia eBay Motors Browse API (inventario real).
-- `src/services/*.js` — `vehicleCatalogService.js` (orquesta NHTSA vPIC + eBay real + fallback local), `nhtsaVpic.js`, `wikimediaCommons.js`, `priceEstimate.js` / `vehicleSimulation.js` (specs y precios estimados coherentes), `llmClient.js`.
+- `src/services/*.js` — `vehicleCatalogService.js` (consulta el API del inventario en PostgreSQL), `priceEstimate.js` / `vehicleSimulation.js` (utilidades heredadas), `llmClient.js`.
 - `src/chat/*.js` y `src/utils/chatStateMachine.js`, `nlpParser.js`, `mergeChatFilters.js` — motor de intenciones y NLP local que interpreta lenguaje natural ("SUV familiar bajo 30000") sin depender de ningún LLM.
 - `src/utils/documentGenerator.js` — generación de PDFs (ficha técnica, info legal, compraventa).
 - `src/data/*.js`, `src/context/VehicleCatalogContext.jsx`.
@@ -34,7 +34,7 @@ Todo `src/components/*.jsx` (estructura JSX y clases, no la lógica de datos que
 - Marca real: **ESCOR**.
 - Vehículos reales del catálogo (Toyota, Honda, Ford, marcas de mercado masivo — no superdeportivos), en USD.
 - Copys ajustados a un marketplace de vehículos usados accesible, no a un concesionario de coleccionistas milmillonarios.
-- Todas las funcionalidades reales existentes deben tener un lugar claro en la nueva UI: búsqueda en lenguaje natural, filtros por tipo/marca/presupuesto/año, comparador de 2 vehículos, ficha de detalle con galería + specs + info legal simulada + botones de descarga de PDF, chat flotante tipo concierge, badge de "anuncio real" cuando el vehículo viene de eBay Motors vs. "precio estimado" cuando es catálogo NHTSA.
+- Todas las funcionalidades reales existentes deben tener un lugar claro en la nueva UI: búsqueda en lenguaje natural, filtros por tipo/marca/presupuesto/año, comparador de 2 vehículos, ficha de detalle con galería + specs + info legal simulada + botones de descarga de PDF, chat flotante tipo concierge y badges basados en el origen de los datos guardados.
 
 ## Stack técnico (mantener)
 

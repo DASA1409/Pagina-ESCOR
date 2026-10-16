@@ -3,13 +3,12 @@ export default function Footer() {
     <footer className="footer hairline">
       <div className="container footer__inner">
         <div className="footer__brand">
-          <span className="navbar__mark">E</span>
-          <span className="navbar__word">ESCOR</span>
+          <img className="brand-logo brand-logo--footer" src="/escor-logo.svg" alt="ESCOR Motors Atelier" />
         </div>
         <p className="footer__tagline">
-          Marketplace de vehículos usados con datos técnicos oficiales (NHTSA vPIC) e imágenes
-          de referencia (Wikimedia Commons). Los precios marcados como "estimados" se calculan
-          mediante un modelo interno y no constituyen una oferta de venta real.
+          Marketplace de vehículos usados con inventario administrado desde la base de datos ESCOR.
+          Los precios y especificaciones dependen de los datos registrados para cada vehículo y no
+          constituyen una oferta de venta real.
         </p>
         <div className="footer__meta">
           <span className="label">© {new Date().getFullYear()} ESCOR</span>

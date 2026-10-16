@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
 import { formatUSD } from '../services/priceEstimate.js'
-import { getCarImageUrl } from '../services/imaginStudio.js'
+import { getVehicleImageUrl } from '../services/imaginStudio.js'
 
 export default function FeaturedVehicles({ onOpenVehicle }) {
   const { allVehicles, loading } = useVehicleCatalog()
@@ -24,7 +24,7 @@ export default function FeaturedVehicles({ onOpenVehicle }) {
           {featured.map((vehicle) => (
             <article className="featured-card hairline" key={vehicle.id}>
               <div className="featured-card__image">
-                <img src={getCarImageUrl(vehicle.make, vehicle.model)} alt={vehicle.title} loading="lazy" />
+                <img src={getVehicleImageUrl(vehicle)} alt={vehicle.title} loading="lazy" />
               </div>
               <div className="featured-card__body">
                 <span className="label label--gold">{vehicle.make}</span>

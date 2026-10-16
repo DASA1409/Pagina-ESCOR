@@ -20,8 +20,8 @@ export default function Hero() {
           El arte de encontrar<br />su próximo vehículo
         </h1>
         <p className="hero__subtitle">
-          ESCOR combina inventario verificado, catálogo técnico oficial y un concierge de
-          inteligencia artificial para llevarle, sin ruido, al vehículo exacto que necesita.
+          ESCOR reúne opciones para distintos estilos de vida y un concierge de inteligencia
+          artificial para acompañarle hasta el vehículo que necesita.
         </p>
         <div className="hero__cta">
           <a href="#concierge" className="btn btn-primary">Iniciar búsqueda inteligente</a>
@@ -42,8 +42,8 @@ export default function Hero() {
             <span className="label">Precio promedio</span>
           </div>
           <div className="hero__metric">
-            <span className="hero__metric-value">NHTSA</span>
-            <span className="label">Fuente de datos oficial</span>
+            <span className="hero__metric-value">Gemini 3</span>
+            <span className="label">Familia de modelos usada</span>
           </div>
         </div>
       </div>

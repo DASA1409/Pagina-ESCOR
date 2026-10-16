@@ -82,7 +82,6 @@ export function generateTechnicalSheet(vehicle) {
   drawSectionTitle(doc, 'Precio', y)
   y += 26
   drawRow(doc, 'PRECIO DE LISTA', formatUSD(vehicle.price), 48, y)
-  drawRow(doc, 'ORIGEN', vehicle.source === 'estimated' ? 'Precio estimado (catálogo)' : 'Anuncio real', 220, y)
 
   doc.save(`ESCOR-ficha-tecnica-${vehicle.make}-${vehicle.model}-${vehicle.year}.pdf`)
 }

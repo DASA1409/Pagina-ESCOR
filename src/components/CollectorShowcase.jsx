@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
 import { formatUSD } from '../services/priceEstimate.js'
-import { getCarImageUrl } from '../services/imaginStudio.js'
+import { getVehicleImageUrl } from '../services/imaginStudio.js'
 
 export default function CollectorShowcase({ onOpenVehicle }) {
   const { allVehicles, loading } = useVehicleCatalog()
@@ -23,7 +23,7 @@ export default function CollectorShowcase({ onOpenVehicle }) {
           {collectorCars.map((vehicle) => (
             <article className="collection-card hairline-gold" key={vehicle.id}>
               <div className="collection-card__image">
-                <img src={getCarImageUrl(vehicle.make, vehicle.model)} alt={vehicle.title} loading="lazy" />
+                <img src={getVehicleImageUrl(vehicle)} alt={vehicle.title} loading="lazy" />
                 <span className="collection-card__badge">Colección</span>
               </div>
               <div className="collection-card__body">

@@ -7,7 +7,7 @@ import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
 import { formatUSD } from '../services/priceEstimate.js'
 import { generateTechnicalSheet, generateLegalInfo, generateSalesAgreement } from '../utils/documentGenerator.js'
 import { generateInsight, generateDescription } from '../services/vehicleInsights.js'
-import { getCarImageGallery } from '../services/imaginStudio.js'
+import { getVehicleImageGallery } from '../services/imaginStudio.js'
 import { getAssignedAgent, getUnitCode } from '../services/conciergeAgents.js'
 import RobotIcon from './icons/RobotIcon.jsx'
 
@@ -71,13 +71,12 @@ export default function VehicleDetailPage({ vehicle, onClose, advisorMode, onAct
   }, [vehicle])
 
   const gallery = useMemo(
-    () => (vehicle ? getCarImageGallery(vehicle.make, vehicle.model) : []),
+    () => (vehicle ? getVehicleImageGallery(vehicle) : []),
     [vehicle],
   )
 
   if (!vehicle) return null
 
-  const isLive = vehicle.source === 'live'
   const isComparing = compareIds.includes(vehicle.id)
   const insightTips = generateInsight(vehicle)
   const activeImage = gallery[activeIndex]
@@ -173,9 +172,6 @@ export default function VehicleDetailPage({ vehicle, onClose, advisorMode, onAct
             <div className="vdp__badges">
               <span className="vdp__badge vdp__badge--outline">
                 <ShieldCheck size={12} strokeWidth={1.75} /> Certificado ESCOR · 150 puntos
-              </span>
-              <span className={`vdp__badge vdp__badge--fill ${isLive ? '' : 'is-estimated'}`}>
-                {isLive ? 'Anuncio real' : 'Precio estimado'}
               </span>
             </div>
             <span className="vdp__unit-code">UNIDAD #{unitCode}</span>

@@ -52,7 +52,7 @@ export default function VehicleGrid({ onOpenVehicle }) {
 
         {error && (
           <div className="catalog__notice hairline">
-            No se pudo conectar con la API de NHTSA en este momento. Mostrando catálogo local de respaldo.
+            No se pudo conectar con la API del catálogo. Verifique que la base de datos y el servidor estén activos.
           </div>
         )}
 

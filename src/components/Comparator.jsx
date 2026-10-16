@@ -4,7 +4,7 @@ import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
 import { getVehicleById } from '../services/vehicleCatalogService.js'
 import { formatUSD } from '../services/priceEstimate.js'
 import Vehicle3DBox from './Vehicle3DBox.jsx'
-import { getCarImageUrl } from '../services/imaginStudio.js'
+import { getVehicleImageUrl } from '../services/imaginStudio.js'
 
 const ROWS = [
   { label: 'Precio', display: (v) => formatUSD(v.price), raw: (v) => v.price, better: 'lower' },
@@ -76,13 +76,13 @@ export default function Comparator() {
             <div className="dim-compare__stats">
               <span className="label label--gold">Dimensiones</span>
               {DIM_ROWS.map(([key, label]) => {
-                const a = vehicles[0].dimensions[key]
-                const b = vehicles[1].dimensions[key]
+                const a = vehicles[0].dimensions?.[key]
+                const b = vehicles[1].dimensions?.[key]
                 return (
                   <div className="dim-compare__row" key={key}>
-                    <span className={a >= b ? 'is-winner' : ''}>{(a / 1000).toFixed(2)} m</span>
+                    <span className={a && b && a >= b ? 'is-winner' : ''}>{a ? `${(a / 1000).toFixed(2)} m` : '—'}</span>
                     <span className="label">{label}</span>
-                    <span className={b >= a ? 'is-winner' : ''}>{(b / 1000).toFixed(2)} m</span>
+                    <span className={a && b && b >= a ? 'is-winner' : ''}>{b ? `${(b / 1000).toFixed(2)} m` : '—'}</span>
                   </div>
                 )
               })}
@@ -99,7 +99,7 @@ export default function Comparator() {
             <div className="comparator__cell comparator__cell--head comparator__cell--corner" />
             {vehicles.map((vehicle) => (
               <div className="comparator__cell comparator__cell--head" key={`head-${vehicle.id}`}>
-                <img src={getCarImageUrl(vehicle.make, vehicle.model)} alt={vehicle.title} />
+                <img src={getVehicleImageUrl(vehicle)} alt={vehicle.title} />
                 <span className="comparator__title">{vehicle.title}</span>
                 <span className="comparator__head-price">{formatUSD(vehicle.price)}</span>
                 <button className="modal__close" onClick={() => toggleCompare(vehicle.id)} aria-label="Quitar">

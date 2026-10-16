@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import {
-  getVehicleCatalogProgressive,
+  getVehicleCatalog,
   filterVehicles,
   getMakeList,
 } from '../services/vehicleCatalogService.js'
@@ -16,14 +16,27 @@ export function VehicleCatalogProvider({ children }) {
 
   useEffect(() => {
     let cancelled = false
-    const initial = getVehicleCatalogProgressive((upgraded) => {
-      if (!cancelled) setAllVehicles(upgraded)
-    })
-    setAllVehicles(initial)
-    setLoading(false)
+
+    getVehicleCatalog()
+      .then((vehicles) => {
+        if (!cancelled) setAllVehicles(vehicles)
+      })
+      .catch((catalogError) => {
+        if (!cancelled) setError(catalogError)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
     return () => {
       cancelled = true
     }
+  }, [])
+
+  const refreshCatalog = useCallback(async () => {
+    const vehicles = await getVehicleCatalog()
+    setAllVehicles(vehicles)
+    setError(null)
   }, [])
 
   const vehicles = useMemo(() => filterVehicles(allVehicles, filters), [allVehicles, filters])
@@ -59,6 +72,7 @@ export function VehicleCatalogProvider({ children }) {
     toggleCompare,
     clearCompare,
     resultsCount: vehicles.length,
+    refreshCatalog,
   }
 
   return <VehicleCatalogContext.Provider value={value}>{children}</VehicleCatalogContext.Provider>
