@@ -2,12 +2,17 @@ import http from 'node:http'
 import { randomBytes, randomUUID, scrypt as scryptCallback, timingSafeEqual } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { promisify } from 'node:util'
+import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import dotenv from 'dotenv'
 import pg from 'pg'
+import { answerVehicleChat } from './chatAssistant.js'
+import openApiDocument from './openapi.js'
 
 const { Pool } = pg
+const require = createRequire(import.meta.url)
+const swaggerUiPath = require('swagger-ui-dist').getAbsoluteFSPath()
 const scrypt = promisify(scryptCallback)
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 dotenv.config({ path: path.join(projectRoot, '.env') })
@@ -139,6 +144,56 @@ const server = http.createServer(async (request, response) => {
   }
 
   try {
+    const requestUrl = new URL(request.url, `http://${request.headers.host || 'localhost'}`)
+
+    if (request.method === 'GET' && requestUrl.pathname === '/api/openapi.json') {
+      sendJson(response, 200, openApiDocument)
+      return
+    }
+
+    if (request.method === 'GET' && ['/api/docs', '/api/docs/'].includes(requestUrl.pathname)) {
+      response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
+      response.end(`<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ESCOR API - Swagger UI</title>
+    <link rel="stylesheet" href="/api/docs/swagger-ui.css">
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="/api/docs/swagger-ui-bundle.js"></script>
+    <script src="/api/docs/swagger-ui-standalone-preset.js"></script>
+    <script>
+      window.onload = () => {
+        window.ui = SwaggerUIBundle({
+          url: '/api/openapi.json',
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          displayRequestDuration: true,
+          persistAuthorization: true,
+          withCredentials: true,
+          presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+          layout: 'StandaloneLayout',
+        })
+      }
+    </script>
+  </body>
+</html>`)
+      return
+    }
+
+    const swaggerAsset = requestUrl.pathname.match(/^\/api\/docs\/(swagger-ui(?:-bundle|-standalone-preset)?\.(?:css|js))$/)
+    if (request.method === 'GET' && swaggerAsset) {
+      const assetName = swaggerAsset[1]
+      const asset = await readFile(path.join(swaggerUiPath, assetName))
+      const contentType = assetName.endsWith('.css') ? 'text/css; charset=utf-8' : 'text/javascript; charset=utf-8'
+      response.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'public, max-age=3600' })
+      response.end(asset)
+      return
+    }
+
     if (request.method === 'GET' && request.url === '/api/health') {
       await pool.query('SELECT 1')
       sendJson(response, 200, { ok: true })
@@ -170,6 +225,13 @@ const server = http.createServer(async (request, response) => {
       if (sessionId) sessions.delete(sessionId)
       response.setHeader('Set-Cookie', 'escor_session=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax')
       sendJson(response, 200, { ok: true })
+      return
+    }
+
+    if (request.method === 'POST' && request.url === '/api/chat') {
+      const payload = await readBody(request)
+      const result = await answerVehicleChat(pool, payload)
+      sendJson(response, 200, result)
       return
     }
 
@@ -239,14 +301,16 @@ const server = http.createServer(async (request, response) => {
     sendJson(response, 404, { error: 'Ruta no encontrada' })
   } catch (error) {
     console.error(error)
-    sendJson(response, 500, { error: 'No se pudo consultar la base de datos' })
+    sendJson(response, error.status || 500, {
+      error: error.status ? error.message : 'No se pudo procesar la solicitud',
+    })
   }
 })
 
 initializeDatabase()
   .then(() => {
     server.listen(port, () => {
-      console.log(`ESCOR API escuchando en http://localhost:${port}`)
+      console.log(`ESCOR API escuchando en http://localhost:${port} — Swagger UI: http://localhost:${port}/api/docs`)
     })
   })
   .catch((error) => {

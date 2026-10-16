@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { X, Send, Sparkles, FileText, ShieldCheck } from 'lucide-react'
 import RobotIcon from './icons/RobotIcon.jsx'
 import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
-import { processMessage } from '../utils/chatStateMachine.js'
+import { sendChatMessage } from '../services/chatService.js'
 import { generateLegalInfo, generateTechnicalSheet } from '../utils/documentGenerator.js'
 
 const ADVISOR_KEY = 'escor.advisor.asked'
@@ -14,9 +14,10 @@ function welcomeText(vehicle) {
 }
 
 export default function ChatDrawer({ currentVehicle, open, onOpenChange, advisorMode, onAdvisorChange }) {
-  const { allVehicles, filters, onApplyFilters } = useVehicleCatalog()
+  const { filters, onApplyFilters, compareIds } = useVehicleCatalog()
   const [messages, setMessages] = useState([{ role: 'assistant', text: welcomeText(null) }])
   const [input, setInput] = useState('')
+  const [sending, setSending] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(false)
   const scrollRef = useRef(null)
   const lastVehicleId = useRef(null)
@@ -80,23 +81,37 @@ export default function ChatDrawer({ currentVehicle, open, onOpenChange, advisor
     if (action.type === 'technical-pdf') generateTechnicalSheet(action.vehicle)
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     const text = input.trim()
-    if (!text) return
+    if (!text || sending) return
 
-    setMessages((prev) => [...prev, { role: 'user', text }])
+    const userMessage = { role: 'user', text }
+    const conversation = [...messages, userMessage]
+    setMessages((prev) => [...prev, userMessage, { role: 'assistant', text: 'Consultando el inventario…', pending: true }])
     setInput('')
+    setSending(true)
 
-    const { reply, filters: newFilters, action } = processMessage({
-      text,
-      currentFilters: filters,
-      allVehicles,
-      currentVehicle,
-    })
-
-    onApplyFilters(newFilters)
-    setMessages((prev) => [...prev, { role: 'assistant', text: reply, action }])
+    try {
+      const result = await sendChatMessage({
+        messages: conversation.map(({ role, text: messageText }) => ({ role, text: messageText })),
+        currentVehicleId: currentVehicle?.id,
+        currentFilters: filters,
+        compareIds,
+      })
+      if (result.filters) onApplyFilters(result.filters)
+      setMessages((prev) => [
+        ...prev.filter((message) => !message.pending),
+        { role: 'assistant', text: result.reply, action: result.action },
+      ])
+    } catch (requestError) {
+      setMessages((prev) => [
+        ...prev.filter((message) => !message.pending),
+        { role: 'assistant', text: `No pude conectar con el asistente: ${requestError.message}` },
+      ])
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -158,9 +173,10 @@ export default function ChatDrawer({ currentVehicle, open, onOpenChange, advisor
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Escriba su búsqueda…"
+            placeholder={sending ? 'Consultando...' : 'Escriba su mensaje…'}
+            disabled={sending}
           />
-          <button type="submit" className="btn btn-primary" aria-label="Enviar">
+          <button type="submit" className="btn btn-primary" aria-label="Enviar" disabled={sending || !input.trim()}>
             <Send size={16} strokeWidth={1.75} />
           </button>
         </form>

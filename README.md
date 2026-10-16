@@ -1,6 +1,6 @@
 # ESCOR — Marketplace de vehículos con asistente IA
 
-Marketplace digital de compra y venta de vehículos usados, con catálogo real (NHTSA), buscador en lenguaje natural, comparador y un asistente conversacional integrado.
+Marketplace digital de compra y venta de vehículos usados, con inventario administrado en PostgreSQL, buscador en lenguaje natural, comparador y un asistente conversacional integrado.
 
 ## Requisitos
 
@@ -30,6 +30,10 @@ El catálogo ahora se consulta desde PostgreSQL mediante el API local. Requiere 
 4. Arranca Vite: `npm run dev`
 
 El API queda disponible en `http://localhost:3001`. La interfaz usa el proxy de Vite para consultar `/api/vehicles`.
+
+### Documentación interactiva del API
+
+Con el servidor API en marcha, abre `http://localhost:3001/api/docs` para explorar y ejecutar los endpoints desde Swagger UI. La especificación OpenAPI también está disponible en `http://localhost:3001/api/openapi.json`. Si estás usando Vite, puedes abrir `http://localhost:5173/api/docs`.
 
 Las credenciales locales están en `.env` y el formato está documentado en `.env.example`. No deben publicarse ni llevarse al frontend.
 

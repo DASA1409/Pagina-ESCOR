@@ -77,7 +77,6 @@ export default function VehicleDetailPage({ vehicle, onClose, advisorMode, onAct
 
   if (!vehicle) return null
 
-  const isLive = vehicle.source === 'live'
   const isComparing = compareIds.includes(vehicle.id)
   const insightTips = generateInsight(vehicle)
   const activeImage = gallery[activeIndex]
@@ -173,9 +172,6 @@ export default function VehicleDetailPage({ vehicle, onClose, advisorMode, onAct
             <div className="vdp__badges">
               <span className="vdp__badge vdp__badge--outline">
                 <ShieldCheck size={12} strokeWidth={1.75} /> Certificado ESCOR · 150 puntos
-              </span>
-              <span className={`vdp__badge vdp__badge--fill ${isLive ? '' : 'is-estimated'}`}>
-                {isLive ? 'Anuncio real' : 'Precio estimado'}
               </span>
             </div>
             <span className="vdp__unit-code">UNIDAD #{unitCode}</span>
