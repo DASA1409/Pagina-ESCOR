@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
-import { formatUSD } from '../services/priceEstimate.js'
+import { formatCOP } from '../services/priceEstimate.js'
 import { getVehicleImageUrl } from '../services/imaginStudio.js'
 
 export default function CollectorShowcase({ onOpenVehicle }) {
@@ -31,7 +31,7 @@ export default function CollectorShowcase({ onOpenVehicle }) {
                 <h3>{vehicle.title}</h3>
                 <span className="label">{vehicle.condition} · {vehicle.mileage.toLocaleString()} km</span>
                 <div className="collection-card__footer">
-                  <span className="collection-card__price">{formatUSD(vehicle.price)}</span>
+                  <span className="collection-card__price">{formatCOP(vehicle.price)}</span>
                   <button className="btn btn-outline" onClick={() => onOpenVehicle(vehicle)}>Ver ficha</button>
                 </div>
               </div>

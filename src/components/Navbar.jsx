@@ -1,6 +1,6 @@
 import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
 
-export default function Navbar({ user, onLogin, onLogout, onOpenAdmin }) {
+export default function Navbar({ user, onLogin, onRegister, onLogout, onOpenAdmin }) {
   const { compareIds } = useVehicleCatalog()
 
   return (
@@ -27,7 +27,10 @@ export default function Navbar({ user, onLogin, onLogout, onOpenAdmin }) {
               <button className="navbar__user" onClick={onLogout} title="Cerrar sesión">{user.name} · Salir</button>
             </>
           ) : (
-            <button className="btn btn-outline navbar__admin-btn" onClick={onLogin}>Iniciar sesión</button>
+            <>
+              <button className="btn btn-outline navbar__admin-btn" onClick={onLogin}>Iniciar sesión</button>
+              <button className="btn btn-primary navbar__admin-btn" onClick={onRegister}>Crear cuenta</button>
+            </>
           )}
           <a href="#asesoria" className="btn btn-primary navbar__cta">Asesoría Presencial</a>
         </div>

@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf'
-import { formatUSD } from '../services/priceEstimate.js'
+import { formatCOP } from '../services/priceEstimate.js'
 
 const GOLD = [197, 160, 89]
 const CARBON = [11, 12, 16]
@@ -81,7 +81,7 @@ export function generateTechnicalSheet(vehicle) {
 
   drawSectionTitle(doc, 'Precio', y)
   y += 26
-  drawRow(doc, 'PRECIO DE LISTA', formatUSD(vehicle.price), 48, y)
+  drawRow(doc, 'PRECIO DE LISTA', formatCOP(vehicle.price), 48, y)
 
   doc.save(`ESCOR-ficha-tecnica-${vehicle.make}-${vehicle.model}-${vehicle.year}.pdf`)
 }
@@ -136,7 +136,7 @@ export function generateSalesAgreement(vehicle, buyer = {}) {
   doc.setFontSize(10)
   doc.text(
     `El vendedor transfiere al comprador la propiedad del vehículo ${vehicle.title}, VIN ${vehicle.vin}, ` +
-      `por el precio acordado de ${formatUSD(vehicle.price)}, sujeto a los términos y condiciones descritos a continuación.`,
+      `por el precio acordado de ${formatCOP(vehicle.price)}, sujeto a los términos y condiciones descritos a continuación.`,
     48,
     y,
     { maxWidth: 500 },

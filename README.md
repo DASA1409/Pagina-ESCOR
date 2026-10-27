@@ -45,3 +45,5 @@ Al ejecutar `npm run server` se crean automáticamente estas cuentas si todavía
 - Usuario: `usuario@escor.com` / `usuario123`
 
 El admin verá el botón `Nuevo vehículo` y podrá crear tarjetas que quedan guardadas en PostgreSQL. Las contraseñas se guardan usando `scrypt`; las sesiones duran mientras el servidor permanezca activo.
+
+Los visitantes pueden crear una cuenta desde `/register` con nombre, correo y contraseña. El registro asigna el rol `user` en el servidor e inicia sesión; el panel de administración continúa reservado para cuentas `admin`.
