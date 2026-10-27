@@ -1,11 +1,10 @@
 import { estimatePriceRange } from './vehicleSimulation.js'
 
-export function formatUSD(amount) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+export function formatCOP(amount) {
+  const formattedAmount = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 0,
   }).format(amount)
+  return `COP $${formattedAmount}`
 }
 
 export function getPriceEstimate(listing) {
@@ -13,7 +12,7 @@ export function getPriceEstimate(listing) {
   return {
     low,
     high,
-    display: `${formatUSD(low)} – ${formatUSD(high)}`,
+    display: `${formatCOP(low)} – ${formatCOP(high)}`,
   }
 }
 

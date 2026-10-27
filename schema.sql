@@ -44,7 +44,7 @@ INSERT INTO vehicles (
 VALUES (
   'nissan-sentra-2025-demo', 'Nissan', 'Sentra', 2025, 'SUV', 'Gasolina',
   'Manual', '4WD', 'Rojo Rubí', '2.0L I4', 252, 24, 4, 5, 20482,
-  17800, 'PENDIENTE-NISSAN-SENTRA-2025', 'Por confirmar', 'Excelente',
+  99990000 , 'PENDIENTE-NISSAN-SENTRA-2025', 'Por confirmar', 'Excelente',
   'https://http2.mlstatic.com/D_Q_NP_2X_698992-MCO116099492444_092026-T.webp', 'database'
 )
 ON CONFLICT (id) DO UPDATE SET image_url = EXCLUDED.image_url;

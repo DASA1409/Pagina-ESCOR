@@ -9,6 +9,7 @@ export const POPULAR_MAKES = [
   { makeName: 'Mazda', models: ['Mazda3', 'CX-5', 'CX-30', 'Mazda2', 'CX-9'] },
   { makeName: 'Volkswagen', models: ['Jetta', 'Tiguan', 'Gol', 'Vento', 'T-Cross'] },
   { makeName: 'Subaru', models: ['Impreza', 'Forester', 'Outback', 'XV', 'Legacy'] },
+  { makeName: 'Lamborghini', models: [] },
 ]
 
 export const BODY_TYPE_OPTIONS = ['Sedan', 'SUV', 'Hatchback', 'Pickup', 'Coupe', 'Minivan']

@@ -7,7 +7,7 @@ import { getModelsForSelectedMake } from '../services/vehicleCatalogService.js'
 import { BODY_TYPE_OPTIONS, BUDGET_OPTIONS } from '../data/fallbackVehicles.js'
 
 const QUICK_CHIPS = [
-  { label: 'SUV familiar bajo $30K', text: 'SUV familiar bajo 30000' },
+  { label: 'SUV familiar bajo COP $30K', text: 'SUV familiar bajo 30000' },
   { label: 'Sedán confiable', text: 'sedán confiable económico' },
   { label: 'Híbridos', text: 'híbrido' },
   { label: 'Pickup', text: 'pickup' },
@@ -154,7 +154,7 @@ export default function SmartSearchPanel({ initialQuery, onQueryConsumed }) {
               >
                 <option value="">Sin límite</option>
                 {BUDGET_OPTIONS.map((b) => (
-                  <option key={b} value={b}>${b.toLocaleString()}</option>
+                  <option key={b} value={b}>COP ${b.toLocaleString()}</option>
                 ))}
               </select>
             </div>

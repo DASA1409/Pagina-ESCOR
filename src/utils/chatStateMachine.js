@@ -1,6 +1,6 @@
 import { parseNaturalLanguage } from '../chat/nlpParser.js'
 import { mergeChatFilters } from '../chat/mergeChatFilters.js'
-import { formatUSD } from '../services/priceEstimate.js'
+import { formatCOP } from '../services/priceEstimate.js'
 import { filterVehicles } from '../services/vehicleCatalogService.js'
 
 function summarizeFilters(filters) {
@@ -11,8 +11,8 @@ function summarizeFilters(filters) {
   if (filters.minYear && filters.maxYear) parts.push(`${filters.minYear}–${filters.maxYear}`)
   else if (filters.minYear) parts.push(`desde ${filters.minYear}`)
   else if (filters.maxYear) parts.push(`hasta ${filters.maxYear}`)
-  if (filters.maxBudget) parts.push(`bajo ${formatUSD(filters.maxBudget)}`)
-  if (filters.minBudget) parts.push(`sobre ${formatUSD(filters.minBudget)}`)
+  if (filters.maxBudget) parts.push(`bajo ${formatCOP(filters.maxBudget)}`)
+  if (filters.minBudget) parts.push(`sobre ${formatCOP(filters.minBudget)}`)
   return parts.join(' · ')
 }
 

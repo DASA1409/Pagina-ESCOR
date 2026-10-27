@@ -136,7 +136,7 @@ const server = http.createServer(async (request, response) => {
   if (request.method === 'OPTIONS') {
     response.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     })
     response.end()
@@ -220,6 +220,46 @@ const server = http.createServer(async (request, response) => {
       return
     }
 
+    if (request.method === 'POST' && request.url === '/api/auth/register') {
+      const { name, email, password } = await readBody(request)
+      const cleanName = typeof name === 'string' ? name.trim() : ''
+      const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : ''
+      if (!cleanName || cleanName.length > 100) {
+        sendJson(response, 400, { error: 'El nombre es obligatorio y debe tener 100 caracteres o menos.' })
+        return
+      }
+      if (cleanEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+        sendJson(response, 400, { error: 'Ingresa un correo electrónico válido.' })
+        return
+      }
+      if (typeof password !== 'string' || password.length < 8 || password.length > 128) {
+        sendJson(response, 400, { error: 'La contraseña debe tener entre 8 y 128 caracteres.' })
+        return
+      }
+
+      const passwordHash = await hashPassword(password)
+      let rows
+      try {
+        const result = await pool.query(
+          `INSERT INTO users (id, name, email, password_hash, role)
+           VALUES ($1, $2, $3, $4, 'user')
+           RETURNING id, name, email, role`,
+          [randomUUID(), cleanName, cleanEmail, passwordHash],
+        )
+        rows = result.rows
+      } catch (registrationError) {
+        if (registrationError.code !== '23505') throw registrationError
+        sendJson(response, 409, { error: 'Ya existe una cuenta con ese correo electrónico.' })
+        return
+      }
+
+      const sessionId = randomBytes(32).toString('hex')
+      sessions.set(sessionId, rows[0].id)
+      response.setHeader('Set-Cookie', `escor_session=${sessionId}; HttpOnly; Path=/; SameSite=Lax`)
+      sendJson(response, 201, { user: mapUser(rows[0]) })
+      return
+    }
+
     if (request.method === 'POST' && request.url === '/api/auth/logout') {
       const sessionId = parseCookies(request).escor_session
       if (sessionId) sessions.delete(sessionId)
@@ -241,6 +281,33 @@ const server = http.createServer(async (request, response) => {
     }
 
     const vehicleRoute = request.url.match(/^\/api\/vehicles(?:\/([^?]+))?(?:\?.*)?$/)
+    if (request.method === 'DELETE' && vehicleRoute?.[1]) {
+      const user = await getAuthenticatedUser(request)
+      if (!user || user.role !== 'admin') {
+        sendJson(response, 403, { error: 'Se requiere una cuenta admin' })
+        return
+      }
+
+      const vehicleId = decodeURIComponent(vehicleRoute[1])
+      const { confirmation } = await readBody(request)
+      const { rows } = await pool.query('SELECT id, year, make, model FROM vehicles WHERE id = $1', [vehicleId])
+      if (!rows[0]) {
+        sendJson(response, 404, { error: 'El vehículo no existe' })
+        return
+      }
+
+      const vehicleTitle = `${rows[0].year} ${rows[0].make} ${rows[0].model}`
+      const normalizeVehicleName = (name) => name.trim().replace(/\s+/g, ' ').toLocaleLowerCase()
+      if (typeof confirmation !== 'string' || normalizeVehicleName(confirmation) !== normalizeVehicleName(vehicleTitle)) {
+        sendJson(response, 400, { error: 'El nombre escrito no coincide con el vehículo.' })
+        return
+      }
+
+      await pool.query('DELETE FROM vehicles WHERE id = $1', [vehicleId])
+      sendJson(response, 200, { deleted: true })
+      return
+    }
+
     if ((request.method === 'POST' || request.method === 'PUT') && vehicleRoute) {
       const user = await getAuthenticatedUser(request)
       if (!user || user.role !== 'admin') {

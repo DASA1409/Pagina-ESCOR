@@ -38,7 +38,7 @@ export default function Hero() {
             <span className="label">Marcas disponibles</span>
           </div>
           <div className="hero__metric">
-            <span className="hero__metric-value">{avgPrice ? `$${Math.round(avgPrice / 1000)}K` : '—'}</span>
+            <span className="hero__metric-value hero__metric-value--price">{avgPrice ? `COP $${Math.round(avgPrice / 1000)}K` : '—'}</span>
             <span className="label">Precio promedio</span>
           </div>
           <div className="hero__metric">

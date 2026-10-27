@@ -43,8 +43,15 @@ function App() {
     setPath(nextPath)
   }
 
-  if (path === '/login') {
-    return <LoginModal onClose={() => navigate('/')} onLogin={(nextUser) => { setUser(nextUser); navigate('/') }} />
+  if (path === '/login' || path === '/register') {
+    return (
+      <LoginModal
+        mode={path === '/register' ? 'register' : 'login'}
+        onModeChange={(mode) => navigate(mode === 'register' ? '/register' : '/login')}
+        onClose={() => navigate('/')}
+        onLogin={setUser}
+      />
+    )
   }
 
   return (
@@ -53,6 +60,7 @@ function App() {
       <Navbar
         user={user}
         onLogin={() => navigate('/login')}
+        onRegister={() => navigate('/register')}
         onLogout={async () => { await logout(); setUser(null) }}
         onOpenAdmin={() => setAdminOpen(true)}
       />
@@ -87,6 +95,7 @@ function App() {
         onOpenChange={setChatOpen}
         advisorMode={advisorMode}
         onAdvisorChange={setAdvisorMode}
+        onOpenVehicle={setSelectedVehicle}
       />
       <AdminVehiclePanel
         open={adminOpen}

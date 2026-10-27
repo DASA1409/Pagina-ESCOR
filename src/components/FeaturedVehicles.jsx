@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
-import { formatUSD } from '../services/priceEstimate.js'
+import { formatCOP } from '../services/priceEstimate.js'
 import { getVehicleImageUrl } from '../services/imaginStudio.js'
 
 export default function FeaturedVehicles({ onOpenVehicle }) {
@@ -47,7 +47,7 @@ export default function FeaturedVehicles({ onOpenVehicle }) {
                 </div>
 
                 <div className="featured-card__footer">
-                  <span className="featured-card__price">{formatUSD(vehicle.price)}</span>
+                  <span className="featured-card__price">{formatCOP(vehicle.price)}</span>
                   <button className="btn btn-outline" onClick={() => onOpenVehicle(vehicle)}>
                     Ver ficha completa
                   </button>

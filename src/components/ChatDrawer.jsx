@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { X, Send, Sparkles, FileText, ShieldCheck } from 'lucide-react'
+import { X, Send, Sparkles, FileText, ShieldCheck, CarFront } from 'lucide-react'
 import RobotIcon from './icons/RobotIcon.jsx'
 import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
 import { sendChatMessage } from '../services/chatService.js'
@@ -13,8 +13,72 @@ function welcomeText(vehicle) {
     : 'Bienvenido al Concierge de ESCOR. Cuénteme qué vehículo busca: marca, tipo de carrocería, presupuesto o año.'
 }
 
-export default function ChatDrawer({ currentVehicle, open, onOpenChange, advisorMode, onAdvisorChange }) {
-  const { filters, onApplyFilters, compareIds } = useVehicleCatalog()
+function parseTableRow(line) {
+  const trimmed = line.trim().replace(/^\|/, '').replace(/\|$/, '')
+  return trimmed.split('|').map((cell) => cell.trim().replace(/\\\|/g, '|'))
+}
+
+function isTableSeparator(line) {
+  return /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line)
+}
+
+function parseMessageBlocks(text) {
+  const lines = text.split('\n')
+  const blocks = []
+  let plainLines = []
+  const flushPlainText = () => {
+    if (plainLines.length) blocks.push({ type: 'text', content: plainLines.join('\n') })
+    plainLines = []
+  }
+
+  for (let index = 0; index < lines.length; index += 1) {
+    if (lines[index].includes('|') && index + 1 < lines.length && isTableSeparator(lines[index + 1])) {
+      flushPlainText()
+      const headers = parseTableRow(lines[index])
+      const rows = []
+      index += 2
+      while (index < lines.length && lines[index].includes('|') && lines[index].trim()) {
+        rows.push(parseTableRow(lines[index]))
+        index += 1
+      }
+      index -= 1
+      blocks.push({ type: 'table', headers, rows })
+    } else {
+      plainLines.push(lines[index])
+    }
+  }
+
+  flushPlainText()
+  return blocks
+}
+
+function MessageContent({ text }) {
+  return parseMessageBlocks(text).map((block, index) => {
+    if (block.type === 'text') {
+      return <span className="chat-bubble__text" key={`text-${index}`}>{block.content}</span>
+    }
+
+    return (
+      <div className="chat-bubble__table-wrap" key={`table-${index}`} role="region" aria-label="Tabla comparativa" tabIndex={0}>
+        <table className="chat-bubble__table">
+          <thead>
+            <tr>{block.headers.map((header, cellIndex) => <th key={`header-${cellIndex}`}>{header}</th>)}</tr>
+          </thead>
+          <tbody>
+            {block.rows.map((row, rowIndex) => (
+              <tr key={`row-${rowIndex}`}>
+                {block.headers.map((_, cellIndex) => <td key={`cell-${cellIndex}`}>{row[cellIndex] || '—'}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  })
+}
+
+export default function ChatDrawer({ currentVehicle, open, onOpenChange, advisorMode, onAdvisorChange, onOpenVehicle }) {
+  const { onApplyFilters, compareIds } = useVehicleCatalog()
   const [messages, setMessages] = useState([{ role: 'assistant', text: welcomeText(null) }])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
@@ -79,6 +143,10 @@ export default function ChatDrawer({ currentVehicle, open, onOpenChange, advisor
     if (!action) return
     if (action.type === 'legal-pdf') generateLegalInfo(action.vehicle)
     if (action.type === 'technical-pdf') generateTechnicalSheet(action.vehicle)
+    if (action.type === 'vehicle-detail') {
+      onOpenVehicle?.(action.vehicle)
+      onOpenChange(false)
+    }
   }
 
   async function handleSubmit(e) {
@@ -88,6 +156,7 @@ export default function ChatDrawer({ currentVehicle, open, onOpenChange, advisor
 
     const userMessage = { role: 'user', text }
     const conversation = [...messages, userMessage]
+    onApplyFilters({})
     setMessages((prev) => [...prev, userMessage, { role: 'assistant', text: 'Consultando el inventario…', pending: true }])
     setInput('')
     setSending(true)
@@ -96,10 +165,10 @@ export default function ChatDrawer({ currentVehicle, open, onOpenChange, advisor
       const result = await sendChatMessage({
         messages: conversation.map(({ role, text: messageText }) => ({ role, text: messageText })),
         currentVehicleId: currentVehicle?.id,
-        currentFilters: filters,
+        currentFilters: {},
         compareIds,
       })
-      if (result.filters) onApplyFilters(result.filters)
+      onApplyFilters(result.filters || {})
       setMessages((prev) => [
         ...prev.filter((message) => !message.pending),
         { role: 'assistant', text: result.reply, action: result.action },
@@ -157,11 +226,19 @@ export default function ChatDrawer({ currentVehicle, open, onOpenChange, advisor
         <div className="chat-drawer__messages" ref={scrollRef}>
           {messages.map((m, i) => (
             <div key={i} className={`chat-bubble chat-bubble--${m.role}`}>
-              {m.text}
+              <MessageContent text={m.text} />
               {m.action && (
                 <button className="chat-bubble__action" onClick={() => runAction(m.action)}>
-                  {m.action.type === 'legal-pdf' ? <ShieldCheck size={14} strokeWidth={1.75} /> : <FileText size={14} strokeWidth={1.75} />}
-                  {m.action.type === 'legal-pdf' ? 'Descargar info legal PDF' : 'Descargar ficha técnica PDF'}
+                  {m.action.type === 'vehicle-detail'
+                    ? <CarFront size={14} strokeWidth={1.75} />
+                    : m.action.type === 'legal-pdf'
+                      ? <ShieldCheck size={14} strokeWidth={1.75} />
+                      : <FileText size={14} strokeWidth={1.75} />}
+                  {m.action.type === 'vehicle-detail'
+                    ? 'Abrir ficha del vehículo'
+                    : m.action.type === 'legal-pdf'
+                      ? 'Descargar info legal PDF'
+                      : 'Descargar ficha técnica PDF'}
                 </button>
               )}
             </div>

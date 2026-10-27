@@ -196,6 +196,45 @@ const openApiDocument = {
         },
       },
     },
+    '/auth/register': {
+      post: {
+        tags: ['Autenticación'],
+        summary: 'Crea una cuenta de usuario e inicia sesión',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string', maxLength: 100, example: 'Ana García' },
+                  email: { type: 'string', format: 'email', maxLength: 254, example: 'ana@example.com' },
+                  password: { type: 'string', format: 'password', minLength: 8, maxLength: 128 },
+                },
+                required: ['name', 'email', 'password'],
+              },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: 'Cuenta creada como usuario y sesión iniciada.',
+            headers: { 'Set-Cookie': { schema: { type: 'string' }, description: 'Cookie HttpOnly escor_session.' } },
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: { user: { $ref: '#/components/schemas/User' } },
+                  required: ['user'],
+                },
+              },
+            },
+          },
+          400: errorResponse,
+          409: errorResponse,
+        },
+      },
+    },
     '/auth/logout': {
       post: {
         tags: ['Autenticación'],
@@ -338,6 +377,47 @@ const openApiDocument = {
               },
             },
           },
+          403: errorResponse,
+          404: errorResponse,
+        },
+      },
+      delete: {
+        tags: ['Vehículos'],
+        summary: 'Elimina un vehículo tras confirmar su nombre (solo admin)',
+        security: [{ escorSession: [] }],
+        parameters: [{
+          name: 'id',
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
+          description: 'Identificador del vehículo.',
+        }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: { confirmation: { type: 'string', example: '2024 Toyota Corolla' } },
+                required: ['confirmation'],
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Vehículo eliminado.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: { deleted: { type: 'boolean', example: true } },
+                  required: ['deleted'],
+                },
+              },
+            },
+          },
+          400: errorResponse,
           403: errorResponse,
           404: errorResponse,
         },

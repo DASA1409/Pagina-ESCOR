@@ -2,12 +2,12 @@ import { Fragment } from 'react'
 import { X, GitCompareArrows, Plus } from 'lucide-react'
 import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
 import { getVehicleById } from '../services/vehicleCatalogService.js'
-import { formatUSD } from '../services/priceEstimate.js'
+import { formatCOP } from '../services/priceEstimate.js'
 import Vehicle3DBox from './Vehicle3DBox.jsx'
 import { getVehicleImageUrl } from '../services/imaginStudio.js'
 
 const ROWS = [
-  { label: 'Precio', display: (v) => formatUSD(v.price), raw: (v) => v.price, better: 'lower' },
+  { label: 'Precio', display: (v) => formatCOP(v.price), raw: (v) => v.price, better: 'lower' },
   { label: 'Año', display: (v) => v.year, raw: (v) => v.year, better: 'higher' },
   { label: 'Motor', display: (v) => v.engine },
   { label: 'Potencia', display: (v) => `${v.horsepower} hp`, raw: (v) => v.horsepower, better: 'higher' },
@@ -101,7 +101,7 @@ export default function Comparator() {
               <div className="comparator__cell comparator__cell--head" key={`head-${vehicle.id}`}>
                 <img src={getVehicleImageUrl(vehicle)} alt={vehicle.title} />
                 <span className="comparator__title">{vehicle.title}</span>
-                <span className="comparator__head-price">{formatUSD(vehicle.price)}</span>
+                <span className="comparator__head-price">{formatCOP(vehicle.price)}</span>
                 <button className="modal__close" onClick={() => toggleCompare(vehicle.id)} aria-label="Quitar">
                   <X size={14} strokeWidth={1.75} />
                 </button>

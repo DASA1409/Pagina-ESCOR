@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { CarFront, Pencil, Plus, X } from 'lucide-react'
+import { CarFront, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
-import { createVehicle, updateVehicle } from '../services/authService.js'
+import { createVehicle, deleteVehicle, updateVehicle } from '../services/authService.js'
 
 const initialForm = {
   make: '', model: '', year: new Date().getFullYear(), bodyType: 'Sedan', fuelType: 'Gasolina',
@@ -22,6 +22,10 @@ function formFromVehicle(vehicle) {
   return { ...initialForm, ...vehicle, mpg: vehicle.mpg ?? '' }
 }
 
+function normalizeVehicleName(name) {
+  return name.trim().replace(/\s+/g, ' ').toLocaleLowerCase()
+}
+
 export default function AdminVehiclePanel({ open, onClose }) {
   const { allVehicles, refreshCatalog } = useVehicleCatalog()
   const [form, setForm] = useState(initialForm)
@@ -29,6 +33,8 @@ export default function AdminVehiclePanel({ open, onClose }) {
   const [view, setView] = useState('list')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
 
   if (!open) return null
 
@@ -69,6 +75,23 @@ export default function AdminVehiclePanel({ open, onClose }) {
     }
   }
 
+  async function handleDelete(vehicle) {
+    if (normalizeVehicleName(deleteConfirmation) !== normalizeVehicleName(vehicle.title) || saving) return
+
+    setSaving(true)
+    setError('')
+    try {
+      await deleteVehicle(vehicle.id, deleteConfirmation)
+      await refreshCatalog()
+      setDeletingId(null)
+      setDeleteConfirmation('')
+    } catch (deleteError) {
+      setError(deleteError.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div className="auth-overlay" role="dialog" aria-modal="true" aria-labelledby="new-vehicle-title">
       <div className="admin-panel glass hairline-gold">
@@ -87,7 +110,53 @@ export default function AdminVehiclePanel({ open, onClose }) {
               {allVehicles.map((vehicle) => (
                 <div className="admin-vehicle-row" key={vehicle.id}>
                   <div><strong>{vehicle.title}</strong><span className="label">{vehicle.vin} · {vehicle.location}</span></div>
-                  <button className="btn btn-outline admin-vehicle-row__edit" onClick={() => startEdit(vehicle)}><Pencil size={14} /> Editar</button>
+                  <div className="admin-vehicle-row__actions">
+                    <button className="btn btn-outline admin-vehicle-row__edit" onClick={() => startEdit(vehicle)}><Pencil size={14} /> Editar</button>
+                    <button
+                      className="btn btn-outline admin-vehicle-row__delete"
+                      onClick={() => {
+                        setDeletingId(vehicle.id)
+                        setDeleteConfirmation('')
+                        setError('')
+                      }}
+                    >
+                      <Trash2 size={14} /> Borrar
+                    </button>
+                  </div>
+                  {deletingId === vehicle.id && (
+                    <div className="admin-vehicle-row__confirm">
+                      <label className="auth-form__field">
+                        <span className="label">Escriba <strong>{vehicle.title.trim().replace(/\s+/g, ' ')}</strong> para confirmar el borrado</span>
+                        <input
+                          type="text"
+                          value={deleteConfirmation}
+                          onChange={(event) => setDeleteConfirmation(event.target.value)}
+                          autoComplete="off"
+                        />
+                      </label>
+                      {error && <p className="auth-form__error" role="alert">{error}</p>}
+                      <div className="admin-vehicle-row__confirm-actions">
+                        <button
+                          className="btn btn-outline"
+                          onClick={() => {
+                            setDeletingId(null)
+                            setDeleteConfirmation('')
+                            setError('')
+                          }}
+                          disabled={saving}
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          className="btn btn-danger"
+                          onClick={() => handleDelete(vehicle)}
+                          disabled={saving || normalizeVehicleName(deleteConfirmation) !== normalizeVehicleName(vehicle.title)}
+                        >
+                          <Trash2 size={14} /> {saving ? 'Borrando...' : 'Confirmar borrado'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

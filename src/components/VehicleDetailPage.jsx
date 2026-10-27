@@ -4,7 +4,7 @@ import {
   ShieldCheck, Lock, Car, FileText, FileSignature, ArrowRight, Phone, BadgeCheck,
 } from 'lucide-react'
 import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
-import { formatUSD } from '../services/priceEstimate.js'
+import { formatCOP } from '../services/priceEstimate.js'
 import { generateTechnicalSheet, generateLegalInfo, generateSalesAgreement } from '../utils/documentGenerator.js'
 import { generateInsight, generateDescription } from '../services/vehicleInsights.js'
 import { getVehicleImageGallery } from '../services/imaginStudio.js'
@@ -183,12 +183,12 @@ export default function VehicleDetailPage({ vehicle, onClose, advisorMode, onAct
             <div className="vdp__price-block">
               <div>
                 <span className="label">Precio de lista</span>
-                <span className="vdp__price">{formatUSD(vehicle.price)}</span>
-                <span className="vdp__price-note">Precio neto sin impuestos: {formatUSD(netPrice)}</span>
+                <span className="vdp__price">{formatCOP(vehicle.price)}</span>
+                <span className="vdp__price-note">Precio neto sin impuestos: {formatCOP(netPrice)}</span>
               </div>
               <div>
                 <span className="label">Financiamiento ESCOR</span>
-                <span className="vdp__price-secondary">Desde {formatUSD(monthlyEstimate)}/mes</span>
+                <span className="vdp__price-secondary">Desde {formatCOP(monthlyEstimate)}/mes</span>
               </div>
             </div>
 

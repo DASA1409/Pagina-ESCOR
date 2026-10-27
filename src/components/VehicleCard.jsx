@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Heart } from 'lucide-react'
 import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
-import { formatUSD } from '../services/priceEstimate.js'
+import { formatCOP } from '../services/priceEstimate.js'
 import { getVehicleImageUrl } from '../services/imaginStudio.js'
 
 function getFlavorBadge(vehicle) {
@@ -86,7 +86,7 @@ export default function VehicleCard({ vehicle, onOpenVehicle }) {
         <p className="vehicle-card__blurb">{getBlurb(vehicle)}</p>
 
         <div className="vehicle-card__price-row">
-          <span className="vehicle-card__price">{formatUSD(vehicle.price)}</span>
+          <span className="vehicle-card__price">{formatCOP(vehicle.price)}</span>
           <span className="label">{vehicle.fuelType}</span>
         </div>
 
