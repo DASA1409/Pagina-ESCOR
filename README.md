@@ -4,7 +4,7 @@ Marketplace digital de compra y venta de vehículos usados, con inventario admin
 
 ## Requisitos
 
-- [Node.js](https://nodejs.org/) versión 18 o superior (incluye `npm`).
+- [Node.js](https://nodejs.org/) versión 20.19 o superior (o 22.12 o superior), requerido por Vite.
 
 ## Cómo arrancarlo
 
@@ -36,6 +36,13 @@ El API queda disponible en `http://localhost:3001`. La interfaz usa el proxy de 
 Con el servidor API en marcha, abre `http://localhost:3001/api/docs` para explorar y ejecutar los endpoints desde Swagger UI. La especificación OpenAPI también está disponible en `http://localhost:3001/api/openapi.json`. Si estás usando Vite, puedes abrir `http://localhost:5173/api/docs`.
 
 Las credenciales locales están en `.env` y el formato está documentado en `.env.example`. No deben publicarse ni llevarse al frontend.
+
+### Despliegue en Vercel y Render
+
+- En Vercel, usa `npm run build` como comando de compilación y `dist` como directorio de salida. El archivo `vercel.json` reenvía `/api/*` al servicio `https://pagina-escor.onrender.com`; deja `VITE_API_URL` sin definir para que el navegador use ese proxy y mantenga las llamadas en el mismo dominio.
+- En Render, configura el servicio Node con `npm install` y `npm run server`. Define `DATABASE_URL` con la URL de conexión de PostgreSQL, además de `GEMINI_API_KEY` si se usa el chat. Render proporciona `PORT`.
+- Para llamadas directas al API (sin el proxy de Vercel), configura `CORS_ORIGINS` en Render como una lista de orígenes exactos separados por comas, por ejemplo `https://pagina-escor.vercel.app,https://tu-preview.vercel.app`. No incluyas rutas ni una barra final.
+- Al terminar el despliegue, comprueba `https://<servicio>.onrender.com/api/health` y `https://<sitio>.vercel.app/api/vehicles`.
 
 ### Acceso inicial
 

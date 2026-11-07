@@ -28,6 +28,12 @@ const pool = new Pool({
 
 const port = Number(process.env.PORT || 3001)
 const sessions = new Map()
+const allowedOrigins = new Set(
+  (process.env.CORS_ORIGINS || 'https://pagina-escor.vercel.app')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+)
 
 const DEFAULT_USERS = [
   { name: 'Administrador ESCOR', email: process.env.ADMIN_EMAIL || 'admin@escor.com', password: process.env.ADMIN_PASSWORD || 'admin123', role: 'admin' },
@@ -53,6 +59,12 @@ function parseCookies(request) {
     const [key, ...value] = cookie.trim().split('=')
     return [key, decodeURIComponent(value.join('='))]
   }))
+}
+
+function getSessionCookieAttributes(request) {
+  const forwardedProtocol = request.headers['x-forwarded-proto']?.split(',')[0].trim()
+  const isSecure = forwardedProtocol === 'https' || request.headers.origin?.startsWith('https://')
+  return `HttpOnly; Path=/; SameSite=${isSecure ? 'None; Secure' : 'Lax'}`
 }
 
 async function readBody(request) {
@@ -126,17 +138,20 @@ async function initializeDatabase() {
 function sendJson(response, status, body) {
   response.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
-    'Access-Control-Allow-Origin': 'https://pagina-escor.vercel.app',
-    'Access-Control-Allow-Credentials': 'true',
   })
   response.end(JSON.stringify(body))
 }
 
 const server = http.createServer(async (request, response) => {
+  response.setHeader('Vary', 'Origin')
+  const origin = request.headers.origin
+  if (origin && allowedOrigins.has(origin)) {
+    response.setHeader('Access-Control-Allow-Origin', origin)
+    response.setHeader('Access-Control-Allow-Credentials', 'true')
+  }
+
   if (request.method === 'OPTIONS') {
     response.writeHead(204, {
-      'Access-Control-Allow-Origin': 'https://pagina-escor.vercel.app',
-      'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     })
@@ -216,7 +231,7 @@ const server = http.createServer(async (request, response) => {
       }
       const sessionId = randomBytes(32).toString('hex')
       sessions.set(sessionId, rows[0].id)
-      response.setHeader('Set-Cookie', `escor_session=${sessionId}; HttpOnly; Path=/; SameSite=Lax`)
+      response.setHeader('Set-Cookie', `escor_session=${sessionId}; ${getSessionCookieAttributes(request)}`)
       sendJson(response, 200, { user: mapUser(rows[0]) })
       return
     }
@@ -256,7 +271,7 @@ const server = http.createServer(async (request, response) => {
 
       const sessionId = randomBytes(32).toString('hex')
       sessions.set(sessionId, rows[0].id)
-      response.setHeader('Set-Cookie', `escor_session=${sessionId}; HttpOnly; Path=/; SameSite=Lax`)
+      response.setHeader('Set-Cookie', `escor_session=${sessionId}; ${getSessionCookieAttributes(request)}`)
       sendJson(response, 201, { user: mapUser(rows[0]) })
       return
     }
@@ -264,7 +279,7 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'POST' && request.url === '/api/auth/logout') {
       const sessionId = parseCookies(request).escor_session
       if (sessionId) sessions.delete(sessionId)
-      response.setHeader('Set-Cookie', 'escor_session=; HttpOnly; Path=/; Max-Age=0; SameSite=Lax')
+      response.setHeader('Set-Cookie', `escor_session=; ${getSessionCookieAttributes(request)}; Max-Age=0`)
       sendJson(response, 200, { ok: true })
       return
     }
