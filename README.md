@@ -44,6 +44,10 @@ Las credenciales locales están en `.env` y el formato está documentado en `.en
 - Para llamadas directas al API (sin el proxy de Vercel), configura `CORS_ORIGINS` en Render como una lista de orígenes exactos separados por comas, por ejemplo `https://pagina-escor.vercel.app,https://tu-preview.vercel.app`. No incluyas rutas ni una barra final.
 - Al terminar el despliegue, comprueba `https://<servicio>.onrender.com/api/health` y `https://<sitio>.vercel.app/api/vehicles`.
 
+### Prueba de usabilidad
+
+El botón `Finalizar prueba` abre una encuesta de 10 preguntas. Las respuestas se guardan como códigos numéricos en `usability_test_surveys` (edad: 1 = menor de 18, 2 = 18–29, 3 = 30–49, 4 = 50+; valoraciones: 0 = no encontré/no usé, 1–5 = escala). Los hitos de búsqueda, selección y encuesta se mantienen en memoria y solo se guardan junto con la encuesta enviada tras confirmar la participación, en `usability_test_events`, con tiempo transcurrido e intervalo desde el hito anterior. Si la persona cierra la encuesta sin enviarla, no se persisten sus datos de prueba. No se guardan mensajes del chat, nombres, correos ni teléfonos. La base crea estas tablas al iniciar el API.
+
 ### Acceso inicial
 
 Al ejecutar `npm run server` se crean automáticamente estas cuentas si todavía no existen:

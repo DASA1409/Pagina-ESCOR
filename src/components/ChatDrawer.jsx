@@ -4,6 +4,7 @@ import RobotIcon from './icons/RobotIcon.jsx'
 import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
 import { sendChatMessage } from '../services/chatService.js'
 import { generateLegalInfo, generateTechnicalSheet } from '../utils/documentGenerator.js'
+import { recordUsabilityEvent } from '../services/usabilityService.js'
 
 const ADVISOR_KEY = 'escor.advisor.asked'
 
@@ -156,6 +157,7 @@ export default function ChatDrawer({ currentVehicle, open, onOpenChange, advisor
 
     const userMessage = { role: 'user', text }
     const conversation = [...messages, userMessage]
+    recordUsabilityEvent('chat_search_submitted')
     onApplyFilters({})
     setMessages((prev) => [...prev, userMessage, { role: 'assistant', text: 'Consultando el inventario…', pending: true }])
     setInput('')

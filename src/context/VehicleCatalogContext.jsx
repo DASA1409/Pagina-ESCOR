@@ -4,6 +4,7 @@ import {
   filterVehicles,
   getMakeList,
 } from '../services/vehicleCatalogService.js'
+import { recordUsabilityEvent } from '../services/usabilityService.js'
 
 const VehicleCatalogContext = createContext(null)
 
@@ -49,6 +50,7 @@ export function VehicleCatalogProvider({ children }) {
   const clearFilters = useCallback(() => setFilters({}), [])
 
   const toggleCompare = useCallback((vehicleId) => {
+    recordUsabilityEvent('compare_vehicle_toggled')
     setCompareIds((prev) => {
       if (prev.includes(vehicleId)) return prev.filter((id) => id !== vehicleId)
       if (prev.length >= 2) return [prev[1], vehicleId]

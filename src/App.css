@@ -796,138 +796,37 @@
 .advisor-dock--collapsed .btn { width: 100%; }
 .advisor-dock--collapsed .insight-card__icon-wrap { animation: fab-bob 2.8s ease-in-out infinite; }
 
-/* Premium booking modal */
-.booking-modal {
+/* Usability survey */
+.usability-modal {
   position: relative;
   width: 100%;
-  max-width: 980px;
+  max-width: 760px;
+  max-height: calc(100dvh - 2 * var(--space-3));
   margin-block: var(--space-4);
-  display: grid;
-  grid-template-columns: 1fr;
+  overflow-y: auto;
+  padding: var(--space-4);
   background: var(--color-surface-1);
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(197, 160, 89, 0.08);
 }
-@media (min-width: 860px) {
-  .booking-modal { grid-template-columns: 0.9fr 1fr; }
-}
-.booking-modal__aside {
-  position: relative;
-  padding: var(--space-6) var(--space-5);
-  background:
-    radial-gradient(circle at 15% 0%, rgba(197, 160, 89, 0.22), transparent 55%),
-    linear-gradient(160deg, rgba(197, 160, 89, 0.1), var(--color-surface-2) 75%);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  border-right: 1px solid var(--hairline-gold);
-}
-.booking-modal__crown {
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--hairline-gold);
-  color: var(--color-champagne);
-  margin-bottom: 4px;
-}
-.booking-modal__aside h2 { margin-top: 6px; font-size: 1.9rem; }
-.booking-modal__aside p { font-size: 0.9rem; }
-.booking-modal__rating {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 0;
-  margin-top: 4px;
-  border-top: 1px solid var(--hairline);
-  border-bottom: 1px solid var(--hairline);
-}
-.booking-modal__stars { display: flex; gap: 2px; color: var(--color-champagne); }
-.booking-modal__benefits {
-  margin-top: var(--space-2);
-  list-style: none;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-.booking-modal__benefits li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--color-text);
-  font-size: 0.87rem;
-  line-height: 1.4;
-}
-.booking-modal__benefit-icon {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 1px solid var(--hairline-gold);
-  color: var(--color-champagne);
-  background: rgba(197, 160, 89, 0.08);
-}
-.booking-modal__form { padding: var(--space-5); }
-.booking-modal__form-title { display: flex; align-items: center; gap: 8px; margin-bottom: var(--space-3); }
-.booking-modal__field { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--space-2); }
-.booking-modal__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
-.booking-modal__toggle { display: flex; gap: 8px; }
-.booking-modal__toggle button {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 0.65rem;
-  border: 1px solid var(--hairline);
-  background: transparent;
-  color: var(--color-text-technical);
-  font-size: 0.78rem;
-  cursor: pointer;
-}
-.booking-modal__toggle button.is-active {
-  border-color: var(--color-champagne);
-  color: var(--color-champagne);
-  background: rgba(197, 160, 89, 0.12);
-}
-.booking-modal__submit { width: 100%; margin-top: var(--space-2); padding-block: 0.9rem; }
-.booking-modal__success {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: var(--space-2);
-  padding: var(--space-6) var(--space-3);
-}
-.booking-modal__success-ring {
-  width: 64px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 1px solid var(--hairline-gold);
-  color: var(--color-champagne);
-  margin-bottom: 4px;
-}
-.booking-modal__success p { max-width: 360px; }
-.booking-modal__reference {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: var(--space-2) var(--space-4);
-  border: 1px dashed var(--hairline-gold);
-  margin: var(--space-2) 0;
-}
-.booking-modal__reference-code {
-  font-family: var(--font-serif);
-  font-size: 1.2rem;
-  color: var(--color-champagne);
-  letter-spacing: 0.05em;
+.usability-survey__header { padding-right: 36px; }
+.usability-survey__header .label { display: inline-flex; align-items: center; gap: 6px; }
+.usability-survey__header h2 { margin: 10px 0 8px; }
+.usability-survey__header p { color: var(--color-text-technical); font-size: 0.85rem; line-height: 1.6; }
+.usability-survey__form { display: flex; flex-direction: column; gap: 12px; margin-top: var(--space-3); }
+.usability-survey__question { display: flex; flex-direction: column; gap: 7px; padding: 12px; border: 1px solid var(--hairline); background: var(--color-surface-2); }
+.usability-survey__question > span { font-size: 0.88rem; line-height: 1.5; }
+.usability-survey__question strong { color: var(--color-champagne); margin-right: 4px; }
+.usability-survey__question select { min-height: 42px; }
+.usability-survey__consent { display: flex; align-items: flex-start; gap: 10px; padding: 10px 2px; color: var(--color-text-technical); font-size: 0.8rem; line-height: 1.5; }
+.usability-survey__consent input { flex: 0 0 auto; margin-top: 3px; accent-color: var(--color-champagne); }
+.usability-survey__submit { width: 100%; justify-content: center; padding-block: 0.9rem; }
+.usability-survey__success { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); padding: var(--space-6) var(--space-3); text-align: center; }
+.usability-survey__success > svg { color: var(--color-champagne); }
+.usability-survey__success p { max-width: 380px; color: var(--color-text-technical); }
+.usability-survey__success .btn { min-width: 140px; justify-content: center; }
+@media (max-width: 600px) {
+  .usability-modal { padding: 24px 16px; }
+  .usability-survey__question { padding: 10px; }
 }
 
 /* Comparator */
@@ -1682,8 +1581,6 @@
   .admin-vehicle-row__edit { padding: 0.65rem; }
   .brand-logo--footer { width: 170px; }
 
-  .booking-modal__row { grid-template-columns: 1fr; }
-  .booking-modal__form { padding: 20px 16px; }
   .chat-drawer {
     width: calc(100vw - 20px);
     max-width: calc(100vw - 20px);

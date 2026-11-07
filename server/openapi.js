@@ -56,7 +56,7 @@ const openApiDocument = {
   info: {
     title: 'ESCOR API',
     version: '1.0.0',
-    description: 'API para el catálogo de vehículos, autenticación y asistente de ESCOR.',
+    description: 'API para el catálogo de vehículos, autenticación, asistente y pruebas de usabilidad de ESCOR.',
   },
   servers: [{ url: '/api', description: 'API ESCOR' }],
   tags: [
@@ -64,6 +64,7 @@ const openApiDocument = {
     { name: 'Autenticación', description: 'Sesión de usuario' },
     { name: 'Vehículos', description: 'Consulta y administración del inventario' },
     { name: 'Asistente', description: 'Concierge de vehículos' },
+    { name: 'Usabilidad', description: 'Encuesta anónima y tiempos de interacción' },
     { name: 'Esquema', description: 'Esquema SQL de la base de datos' },
   ],
   components: {
@@ -297,6 +298,64 @@ const openApiDocument = {
           400: errorResponse,
           502: errorResponse,
           503: errorResponse,
+        },
+      },
+    },
+    '/usability/surveys': {
+      post: {
+        tags: ['Usabilidad'],
+        summary: 'Guarda respuestas anónimas y tiempos de una prueba de usabilidad',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  sessionId: { type: 'string', format: 'uuid' },
+                  ageGroup: { type: 'integer', enum: [1, 2, 3, 4], description: '1: menor de 18, 2: 18–29, 3: 30–49, 4: 50 o más' },
+                  consent: { type: 'boolean', enum: [true], description: 'Confirmación de participación voluntaria' },
+                  answers: {
+                    type: 'object',
+                    properties: {
+                      chatbotDiscoverability: { type: 'integer', minimum: 0, maximum: 5 },
+                      chatbotPromptingEase: { type: 'integer', minimum: 0, maximum: 5 },
+                      chatbotResultRelevance: { type: 'integer', minimum: 0, maximum: 5 },
+                      catalogNavigation: { type: 'integer', minimum: 0, maximum: 5 },
+                      vehicleDetailsClarity: { type: 'integer', minimum: 0, maximum: 5 },
+                      comparisonDiscoverability: { type: 'integer', minimum: 0, maximum: 5 },
+                      inventoryVariety: { type: 'integer', minimum: 0, maximum: 5 },
+                      taskCompletion: { type: 'integer', minimum: 0, maximum: 5 },
+                      overallSatisfaction: { type: 'integer', minimum: 0, maximum: 5 },
+                    },
+                    required: [
+                      'chatbotDiscoverability', 'chatbotPromptingEase', 'chatbotResultRelevance',
+                      'catalogNavigation', 'vehicleDetailsClarity', 'comparisonDiscoverability',
+                      'inventoryVariety', 'taskCompletion', 'overallSatisfaction',
+                    ],
+                  },
+                  events: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        sequenceNumber: { type: 'integer', minimum: 1 },
+                        eventType: { type: 'string' },
+                        elapsedMs: { type: 'integer', minimum: 0 },
+                      },
+                      required: ['sequenceNumber', 'eventType', 'elapsedMs'],
+                    },
+                  },
+                },
+                required: ['sessionId', 'ageGroup', 'consent', 'answers', 'events'],
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Encuesta y eventos guardados.' },
+          400: errorResponse,
+          409: errorResponse,
         },
       },
     },

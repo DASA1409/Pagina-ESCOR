@@ -34,6 +34,28 @@ const allowedOrigins = new Set(
     .map((origin) => origin.trim())
     .filter(Boolean),
 )
+const usabilityEventTypes = new Set([
+  'session_started',
+  'catalog_search_submitted',
+  'catalog_filter_changed',
+  'chat_search_submitted',
+  'compare_vehicle_toggled',
+  'vehicle_selected',
+  'usability_survey_opened',
+  'usability_survey_closed',
+  'usability_survey_submitted',
+])
+const usabilitySurveyFields = [
+  'chatbotDiscoverability',
+  'chatbotPromptingEase',
+  'chatbotResultRelevance',
+  'catalogNavigation',
+  'vehicleDetailsClarity',
+  'comparisonDiscoverability',
+  'inventoryVariety',
+  'taskCompletion',
+  'overallSatisfaction',
+]
 
 const DEFAULT_USERS = [
   { name: 'Administrador ESCOR', email: process.env.ADMIN_EMAIL || 'admin@escor.com', password: process.env.ADMIN_PASSWORD || 'admin123', role: 'admin' },
@@ -288,6 +310,83 @@ const server = http.createServer(async (request, response) => {
       const payload = await readBody(request)
       const result = await answerVehicleChat(pool, payload)
       sendJson(response, 200, result)
+      return
+    }
+
+    if (request.method === 'POST' && request.url === '/api/usability/surveys') {
+      const { sessionId, ageGroup, consent, answers, events } = await readBody(request)
+      const validSessionId = typeof sessionId === 'string'
+        && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sessionId)
+      const validAnswers = answers && typeof answers === 'object'
+        && usabilitySurveyFields.every((field) => Number.isInteger(answers[field]) && answers[field] >= 0 && answers[field] <= 5)
+      const validEvents = Array.isArray(events) && events.length > 0 && events.length <= 5000
+        && events.every((event, index) => (
+          event
+          && event.sequenceNumber === index + 1
+          && usabilityEventTypes.has(event.eventType)
+          && Number.isInteger(event.elapsedMs)
+          && event.elapsedMs >= 0
+          && event.elapsedMs <= 86_400_000
+          && (index === 0 || event.elapsedMs >= events[index - 1].elapsedMs)
+        ))
+        && events[0]?.eventType === 'session_started'
+        && events.at(-1)?.eventType === 'usability_survey_submitted'
+      if (!validSessionId || !Number.isInteger(ageGroup) || ageGroup < 1 || ageGroup > 4
+        || consent !== true || !validAnswers || !validEvents) {
+        sendJson(response, 400, { error: 'Las respuestas de la encuesta no son válidas.' })
+        return
+      }
+
+      const fields = [
+        'chatbot_discoverability',
+        'chatbot_prompting_ease',
+        'chatbot_result_relevance',
+        'catalog_navigation',
+        'vehicle_details_clarity',
+        'comparison_discoverability',
+        'inventory_variety',
+        'task_completion',
+        'overall_satisfaction',
+      ]
+      const values = [sessionId, ageGroup, consent, ...usabilitySurveyFields.map((field) => answers[field])]
+      const placeholders = values.map((_, index) => `$${index + 1}`)
+      const client = await pool.connect()
+      try {
+        await client.query('BEGIN')
+        await client.query(
+          'INSERT INTO usability_test_sessions (session_id) VALUES ($1) ON CONFLICT (session_id) DO NOTHING',
+          [sessionId],
+        )
+        const result = await client.query(
+          `INSERT INTO usability_test_surveys (
+             session_id, age_group, consent_confirmed, ${fields.join(', ')}
+           ) VALUES (${placeholders.join(', ')})
+           ON CONFLICT (session_id) DO NOTHING`,
+          values,
+        )
+        if (result.rowCount === 0) {
+          await client.query('ROLLBACK')
+          sendJson(response, 409, { error: 'Esta sesión ya envió una encuesta.' })
+          return
+        }
+        let previousElapsedMs = 0
+        for (const event of events) {
+          const intervalMs = Math.max(0, event.elapsedMs - previousElapsedMs)
+          await client.query(
+            `INSERT INTO usability_test_events (session_id, sequence_number, event_type, elapsed_ms, interval_ms)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [sessionId, event.sequenceNumber, event.eventType, event.elapsedMs, intervalMs],
+          )
+          previousElapsedMs = event.elapsedMs
+        }
+        await client.query('COMMIT')
+      } catch (error) {
+        await client.query('ROLLBACK')
+        throw error
+      } finally {
+        client.release()
+      }
+      sendJson(response, 201, { ok: true })
       return
     }
 

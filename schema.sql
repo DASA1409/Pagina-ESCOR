@@ -36,6 +36,45 @@ CREATE TABLE IF NOT EXISTS vehicles (
 
 ALTER TABLE vehicles ADD COLUMN IF NOT EXISTS image_url TEXT;
 
+CREATE TABLE IF NOT EXISTS usability_test_sessions (
+  session_id UUID PRIMARY KEY,
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS usability_test_events (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  session_id UUID NOT NULL REFERENCES usability_test_sessions(session_id) ON DELETE CASCADE,
+  sequence_number INTEGER NOT NULL CHECK (sequence_number > 0),
+  event_type TEXT NOT NULL CHECK (event_type IN (
+    'session_started',
+    'chat_search_submitted',
+    'vehicle_selected',
+    'usability_survey_opened',
+    'usability_survey_closed',
+    'usability_survey_submitted'
+  )),
+  elapsed_ms INTEGER NOT NULL CHECK (elapsed_ms >= 0),
+  interval_ms INTEGER NOT NULL CHECK (interval_ms >= 0),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (session_id, sequence_number)
+);
+
+CREATE TABLE IF NOT EXISTS usability_test_surveys (
+  session_id UUID PRIMARY KEY REFERENCES usability_test_sessions(session_id) ON DELETE CASCADE,
+  age_group SMALLINT NOT NULL CHECK (age_group BETWEEN 1 AND 4),
+  consent_confirmed BOOLEAN NOT NULL CHECK (consent_confirmed),
+  chatbot_discoverability SMALLINT NOT NULL CHECK (chatbot_discoverability BETWEEN 0 AND 5),
+  chatbot_prompting_ease SMALLINT NOT NULL CHECK (chatbot_prompting_ease BETWEEN 0 AND 5),
+  chatbot_result_relevance SMALLINT NOT NULL CHECK (chatbot_result_relevance BETWEEN 0 AND 5),
+  catalog_navigation SMALLINT NOT NULL CHECK (catalog_navigation BETWEEN 0 AND 5),
+  vehicle_details_clarity SMALLINT NOT NULL CHECK (vehicle_details_clarity BETWEEN 0 AND 5),
+  comparison_discoverability SMALLINT NOT NULL CHECK (comparison_discoverability BETWEEN 0 AND 5),
+  inventory_variety SMALLINT NOT NULL CHECK (inventory_variety BETWEEN 0 AND 5),
+  task_completion SMALLINT NOT NULL CHECK (task_completion BETWEEN 0 AND 5),
+  overall_satisfaction SMALLINT NOT NULL CHECK (overall_satisfaction BETWEEN 0 AND 5),
+  submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 INSERT INTO vehicles (
   id, make, model, year, body_type, fuel_type, transmission, drivetrain,
   color, engine, horsepower, mpg, doors, seats, mileage, price, vin,

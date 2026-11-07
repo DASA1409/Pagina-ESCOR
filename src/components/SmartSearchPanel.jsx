@@ -5,6 +5,7 @@ import { parseNaturalLanguage } from '../chat/nlpParser.js'
 import { mergeChatFilters } from '../chat/mergeChatFilters.js'
 import { getModelsForSelectedMake } from '../services/vehicleCatalogService.js'
 import { BODY_TYPE_OPTIONS, BUDGET_OPTIONS } from '../data/fallbackVehicles.js'
+import { recordUsabilityEvent } from '../services/usabilityService.js'
 
 const QUICK_CHIPS = [
   { label: 'SUV familiar bajo COP $30K', text: 'SUV familiar bajo 30000' },
@@ -23,6 +24,7 @@ export default function SmartSearchPanel({ initialQuery, onQueryConsumed }) {
 
   function applyNaturalLanguage(text) {
     const { filters: parsed } = parseNaturalLanguage(text)
+    recordUsabilityEvent('catalog_search_submitted')
     onApplyFilters(mergeChatFilters(filters, parsed))
   }
 
@@ -43,6 +45,7 @@ export default function SmartSearchPanel({ initialQuery, onQueryConsumed }) {
   }
 
   function handleFieldChange(field, value) {
+    recordUsabilityEvent('catalog_filter_changed')
     const next = { ...filters, [field]: value || undefined }
     if (field === 'make') next.model = undefined
     onApplyFilters(next)

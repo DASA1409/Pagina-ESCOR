@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowLeft, GitCompareArrows, Heart, FileDown, ChevronLeft, ChevronRight,
-  ShieldCheck, Lock, Car, FileText, FileSignature, ArrowRight, Phone, BadgeCheck,
+  ShieldCheck, ClipboardCheck, Car, FileText, FileSignature, ArrowRight, Phone, BadgeCheck,
 } from 'lucide-react'
 import { useVehicleCatalog } from '../context/VehicleCatalogContext.jsx'
 import { formatCOP } from '../services/priceEstimate.js'
@@ -57,7 +57,7 @@ function useBodyScrollLock(locked) {
   }, [locked])
 }
 
-export default function VehicleDetailPage({ vehicle, onClose, advisorMode, onActivateAdvisor, onOpenChat, onOpenBooking }) {
+export default function VehicleDetailPage({ vehicle, onClose, advisorMode, onActivateAdvisor, onOpenChat, onOpenUsabilitySurvey }) {
   const { toggleCompare, compareIds } = useVehicleCatalog()
   const [activeIndex, setActiveIndex] = useState(0)
   const [imageFailed, setImageFailed] = useState(false)
@@ -192,8 +192,8 @@ export default function VehicleDetailPage({ vehicle, onClose, advisorMode, onAct
               </div>
             </div>
 
-            <button className="btn btn-primary vdp__cta-primary" onClick={onOpenBooking}>
-              <Lock size={16} strokeWidth={1.75} /> Reservar cita privada e inspección
+            <button className="btn btn-primary vdp__cta-primary" onClick={onOpenUsabilitySurvey}>
+              <ClipboardCheck size={16} strokeWidth={1.75} /> Finalizar prueba de usabilidad
             </button>
             <div className="vdp__cta-row">
               <button className="btn btn-outline" onClick={onOpenChat}>

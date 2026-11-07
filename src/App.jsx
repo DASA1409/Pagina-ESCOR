@@ -11,25 +11,30 @@ import Comparator from './components/Comparator.jsx'
 import Services from './components/Services.jsx'
 import CtaBanner from './components/CtaBanner.jsx'
 import ChatDrawer from './components/ChatDrawer.jsx'
-import PremiumBookingModal from './components/PremiumBookingModal.jsx'
+import UsabilitySurveyModal from './components/UsabilitySurveyModal.jsx'
 import Footer from './components/Footer.jsx'
 import PageBackground from './components/effects/PageBackground.jsx'
 import './App.css'
 import LoginModal from './components/LoginModal.jsx'
 import AdminVehiclePanel from './components/AdminVehiclePanel.jsx'
 import { getCurrentUser, logout } from './services/authService.js'
+import { recordUsabilityEvent } from './services/usabilityService.js'
 
 function App() {
   const [path, setPath] = useState(window.location.pathname)
   const [selectedVehicle, setSelectedVehicle] = useState(null)
   const [chatOpen, setChatOpen] = useState(false)
   const [advisorMode, setAdvisorMode] = useState(null)
-  const [bookingOpen, setBookingOpen] = useState(false)
+  const [surveyOpen, setSurveyOpen] = useState(false)
   const [user, setUser] = useState(null)
   const [adminOpen, setAdminOpen] = useState(false)
 
   useEffect(() => {
     getCurrentUser().then((data) => setUser(data.user)).catch(() => setUser(null))
+  }, [])
+
+  useEffect(() => {
+    recordUsabilityEvent('session_started')
   }, [])
 
   useEffect(() => {
@@ -41,6 +46,16 @@ function App() {
   function navigate(nextPath) {
     window.history.pushState({}, '', nextPath)
     setPath(nextPath)
+  }
+
+  function openVehicle(vehicle) {
+    recordUsabilityEvent('vehicle_selected')
+    setSelectedVehicle(vehicle)
+  }
+
+  function openUsabilitySurvey() {
+    recordUsabilityEvent('usability_survey_opened')
+    setSurveyOpen(true)
   }
 
   if (path === '/login' || path === '/register') {
@@ -67,12 +82,12 @@ function App() {
       <main>
         <Hero />
         <SmartSearchPanel />
-        <CollectorShowcase onOpenVehicle={setSelectedVehicle} />
-        <FeaturedVehicles onOpenVehicle={setSelectedVehicle} />
-        <VehicleGrid onOpenVehicle={setSelectedVehicle} />
+        <CollectorShowcase onOpenVehicle={openVehicle} />
+        <FeaturedVehicles onOpenVehicle={openVehicle} />
+        <VehicleGrid onOpenVehicle={openVehicle} />
         <Comparator />
         <Services />
-        <CtaBanner onOpenChat={() => setChatOpen(true)} onOpenBooking={() => setBookingOpen(true)} />
+        <CtaBanner onOpenChat={() => setChatOpen(true)} onOpenUsabilitySurvey={openUsabilitySurvey} />
       </main>
       <Footer />
 
@@ -82,12 +97,11 @@ function App() {
         advisorMode={advisorMode}
         onActivateAdvisor={() => setAdvisorMode(true)}
         onOpenChat={() => setChatOpen(true)}
-        onOpenBooking={() => setBookingOpen(true)}
+        onOpenUsabilitySurvey={openUsabilitySurvey}
       />
-      <PremiumBookingModal
-        open={bookingOpen}
-        onClose={() => setBookingOpen(false)}
-        prefillVehicle={selectedVehicle}
+      <UsabilitySurveyModal
+        open={surveyOpen}
+        onClose={() => setSurveyOpen(false)}
       />
       <ChatDrawer
         currentVehicle={selectedVehicle}
@@ -95,7 +109,7 @@ function App() {
         onOpenChange={setChatOpen}
         advisorMode={advisorMode}
         onAdvisorChange={setAdvisorMode}
-        onOpenVehicle={setSelectedVehicle}
+        onOpenVehicle={openVehicle}
       />
       <AdminVehiclePanel
         open={adminOpen}
