@@ -5,20 +5,20 @@ let ai = null
 const toolDeclarations = [
   {
     name: 'search_inventory',
-    description: 'Busca vehículos reales del inventario aplicando criterios que pidió el usuario. Úsala para cualquier recomendación o búsqueda de vehículos.',
+    description: 'Busca vehículos reales del inventario aplicando criterios aproximados de texto (fragmentos, sin exigir coincidencia exacta y sin distinguir acentos). Úsala para cualquier recomendación o búsqueda de vehículos.',
     parameters: {
       type: Type.OBJECT,
       properties: {
-        make: { type: Type.STRING, description: 'Marca, por ejemplo Toyota' },
-        model: { type: Type.STRING, description: 'Modelo del vehículo' },
-        bodyType: { type: Type.STRING, description: 'Carrocería, por ejemplo SUV o Sedan' },
-        fuelType: { type: Type.STRING, description: 'Tipo de combustible' },
-        transmission: { type: Type.STRING, description: 'Tipo de transmisión' },
+        make: { type: Type.STRING, description: 'Marca o fragmento de la marca, por ejemplo Toyota o Toyo' },
+        model: { type: Type.STRING, description: 'Modelo o fragmento del modelo' },
+        bodyType: { type: Type.STRING, description: 'Carrocería o fragmento, por ejemplo SUV o Sedan' },
+        fuelType: { type: Type.STRING, description: 'Combustible o fragmento del tipo de combustible' },
+        transmission: { type: Type.STRING, description: 'Transmisión o fragmento del tipo de transmisión' },
         minYear: { type: Type.INTEGER, description: 'Año mínimo' },
         maxYear: { type: Type.INTEGER, description: 'Año máximo' },
         minBudget: { type: Type.NUMBER, description: 'Precio mínimo' },
         maxBudget: { type: Type.NUMBER, description: 'Precio máximo' },
-        query: { type: Type.STRING, description: 'Texto libre que debe aparecer en marca, modelo, carrocería o combustible' },
+        query: { type: Type.STRING, description: 'Texto o fragmento que se buscará en los datos textuales del vehículo, como marca, modelo, carrocería, combustible, motor, color o ubicación' },
       },
     },
   },
@@ -143,6 +143,18 @@ function mergeFilters(currentFilters, requestedFilters) {
   return merged
 }
 
+function normalizedColumn(column) {
+  return `REGEXP_REPLACE(TRANSLATE(LOWER(BTRIM(${column})), 'áéíóúüñ', 'aeiouun'), '[^a-z0-9]', '', 'g')`
+}
+
+function addPartialMatch(clauses, values, column, value) {
+  values.push(String(value).trim().slice(0, 100))
+  const parameter = `$${values.length}`
+  clauses.push(
+    `(POSITION(${normalizedColumn(parameter)} IN ${normalizedColumn(column)}) > 0 OR POSITION(${normalizedColumn(column)} IN ${normalizedColumn(parameter)}) > 0)`,
+  )
+}
+
 function toVehicle(row) {
   if (!row) return null
   return {
@@ -188,21 +200,31 @@ async function searchInventory(pool, requestedFilters, currentFilters) {
     clauses.push(clause.replace('?', `$${values.length}`))
   }
 
-  if (filters.make) add('LOWER(BTRIM(make)) = LOWER(?)', String(filters.make).trim().slice(0, 80))
-  if (filters.model) add('LOWER(BTRIM(model)) = LOWER(?)', String(filters.model).trim().slice(0, 80))
-  if (filters.bodyType) add('LOWER(BTRIM(body_type)) = LOWER(?)', String(filters.bodyType).trim().slice(0, 50))
-  if (filters.fuelType) add('LOWER(BTRIM(fuel_type)) = LOWER(?)', String(filters.fuelType).trim().slice(0, 50))
-  if (filters.transmission) add('LOWER(BTRIM(transmission)) = LOWER(?)', String(filters.transmission).trim().slice(0, 50))
+  if (filters.make) addPartialMatch(clauses, values, 'make', filters.make)
+  if (filters.model) addPartialMatch(clauses, values, 'model', filters.model)
+  if (filters.bodyType) addPartialMatch(clauses, values, 'body_type', filters.bodyType)
+  if (filters.fuelType) addPartialMatch(clauses, values, 'fuel_type', filters.fuelType)
+  if (filters.transmission) addPartialMatch(clauses, values, 'transmission', filters.transmission)
   if (safeNumber(filters.minYear)) add('year >= ?', safeNumber(filters.minYear))
   if (safeNumber(filters.maxYear)) add('year <= ?', safeNumber(filters.maxYear))
   if (safeNumber(filters.minBudget)) add('price >= ?', safeNumber(filters.minBudget))
   if (safeNumber(filters.maxBudget)) add('price <= ?', safeNumber(filters.maxBudget))
   if (filters.collectorOnly) clauses.push('is_collector = TRUE')
   if (filters.query) {
-    const searchTerm = `%${String(filters.query).slice(0, 100)}%`
-    values.push(searchTerm)
-    const parameter = `$${values.length}`
-    clauses.push(`(BTRIM(make) ILIKE ${parameter} OR BTRIM(model) ILIKE ${parameter} OR BTRIM(body_type) ILIKE ${parameter} OR BTRIM(fuel_type) ILIKE ${parameter})`)
+    const searchableColumns = ['make', 'model', 'body_type', 'fuel_type', 'transmission', 'engine', 'color', 'location']
+    const queryTokens = String(filters.query).trim().split(/\s+/).filter(Boolean).slice(0, 8)
+    const queryClauses = queryTokens.map((token) => {
+      values.push(token.slice(0, 100))
+      const parameter = `$${values.length}`
+      const normalizedToken = normalizedColumn(parameter)
+      const tokenMatches = searchableColumns.map((column) =>
+        `(POSITION(${normalizedToken} IN ${normalizedColumn(column)}) > 0 OR POSITION(${normalizedColumn(column)} IN ${normalizedToken}) > 0)`,
+      )
+      return `(${tokenMatches.join(' OR ')})`
+    })
+    if (queryClauses.length) {
+      clauses.push(`(${queryClauses.join(' AND ')})`)
+    }
   }
 
   const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''
