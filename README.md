@@ -46,7 +46,7 @@ Las credenciales locales están en `.env` y el formato está documentado en `.en
 
 ### Prueba de usabilidad
 
-El botón `Finalizar prueba` abre una encuesta de 10 preguntas. Las respuestas se guardan como códigos numéricos en `usability_test_surveys` (edad: 1 = menor de 18, 2 = 18–29, 3 = 30–49, 4 = 50+; valoraciones: 0 = no encontré/no usé, 1–5 = escala). Los hitos de búsqueda, selección y encuesta se mantienen en memoria y solo se guardan junto con la encuesta enviada tras confirmar la participación, en `usability_test_events`, con tiempo transcurrido e intervalo desde el hito anterior. Si la persona cierra la encuesta sin enviarla, no se persisten sus datos de prueba. No se guardan mensajes del chat, nombres, correos ni teléfonos. La base crea estas tablas al iniciar el API.
+El botón `Finalizar prueba` abre una encuesta de 10 preguntas para mayores de 18 años. Las respuestas se guardan como códigos numéricos en `usability_test_surveys` (edad: 2 = 18–29, 3 = 30–49, 4 = 50+; valoraciones: 0 = no encontré/no usé, 1–5 = escala). Incluye un comentario opcional de hasta 2.000 caracteres; no se deben incluir datos personales. Los hitos de búsqueda, selección y encuesta se mantienen en memoria y solo se guardan junto con la encuesta enviada tras confirmar la participación, en `usability_test_events`, con tiempo transcurrido e intervalo desde el hito anterior. Si la persona cierra la encuesta sin enviarla, no se persisten sus datos de prueba. No se guardan mensajes del chat, nombres, correos ni teléfonos. La base crea estas tablas al iniciar el API.
 
 ### Acceso inicial
 

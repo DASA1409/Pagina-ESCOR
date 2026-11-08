@@ -3,7 +3,6 @@ import { CheckCircle2, ClipboardCheck, X } from 'lucide-react'
 import { recordUsabilityEvent, submitUsabilitySurvey } from '../services/usabilityService.js'
 
 const AGE_GROUPS = [
-  { value: '1', label: 'Menor de 18' },
   { value: '2', label: '18 a 29' },
   { value: '3', label: '30 a 49' },
   { value: '4', label: '50 o más' },
@@ -33,6 +32,7 @@ const ANSWER_OPTIONS = [
 export default function UsabilitySurveyModal({ open, onClose }) {
   const [ageGroup, setAgeGroup] = useState('')
   const [answers, setAnswers] = useState({})
+  const [comment, setComment] = useState('')
   const [consent, setConsent] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -48,9 +48,11 @@ export default function UsabilitySurveyModal({ open, onClose }) {
     setError('')
     try {
       recordUsabilityEvent('usability_survey_submitted')
-      await submitUsabilitySurvey(Number(ageGroup), Object.fromEntries(
-        QUESTIONS.map(({ key }) => [key, Number(answers[key])]),
-      ))
+      await submitUsabilitySurvey(
+        Number(ageGroup),
+        Object.fromEntries(QUESTIONS.map(({ key }) => [key, Number(answers[key])])),
+        comment.trim(),
+      )
       setSubmitted(true)
     } catch (submitError) {
       setError(submitError.message)
@@ -90,7 +92,7 @@ export default function UsabilitySurveyModal({ open, onClose }) {
             <header className="usability-survey__header">
               <span className="label label--gold"><ClipboardCheck size={14} /> Prueba de usabilidad</span>
               <h2 id="usability-survey-title">¿Cómo fue tu experiencia?</h2>
-              <p>Son 10 preguntas breves. No pedimos nombre, correo ni teléfono. Los tiempos se mantienen temporalmente en esta página y solo se guardan si envías la encuesta. La participación es voluntaria; si eres menor de 18 años, participa con autorización de tu acudiente.</p>
+              <p>Son 10 preguntas breves para personas de 18 años o más. No pedimos nombre, correo ni teléfono. Los tiempos se mantienen temporalmente en esta página y solo se guardan si envías la encuesta. La participación es voluntaria.</p>
             </header>
 
             <form className="usability-survey__form" onSubmit={handleSubmit}>
@@ -118,9 +120,20 @@ export default function UsabilitySurveyModal({ open, onClose }) {
                 </label>
               ))}
 
+              <label className="usability-survey__question">
+                <span>Comentario opcional</span>
+                <textarea
+                  value={comment}
+                  onChange={(event) => setComment(event.target.value)}
+                  maxLength={2000}
+                  rows={4}
+                  placeholder="¿Qué mejorarías de tu experiencia? No incluyas datos personales."
+                />
+              </label>
+
               <label className="usability-survey__consent">
                 <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} required />
-                <span>Participo voluntariamente y autorizo guardar mis respuestas y tiempos de interacción sin datos personales. Si soy menor de edad, cuento con autorización de mi acudiente.</span>
+                <span>Confirmo que tengo 18 años o más, participo voluntariamente y autorizo guardar mis respuestas, comentario y tiempos de interacción.</span>
               </label>
 
               {error && <p className="auth-form__error" role="alert">{error}</p>}

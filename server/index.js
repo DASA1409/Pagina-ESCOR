@@ -314,7 +314,7 @@ const server = http.createServer(async (request, response) => {
     }
 
     if (request.method === 'POST' && request.url === '/api/usability/surveys') {
-      const { sessionId, ageGroup, consent, answers, events } = await readBody(request)
+      const { sessionId, ageGroup, consent, answers, comment, events } = await readBody(request)
       const validSessionId = typeof sessionId === 'string'
         && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sessionId)
       const validAnswers = answers && typeof answers === 'object'
@@ -331,8 +331,10 @@ const server = http.createServer(async (request, response) => {
         ))
         && events[0]?.eventType === 'session_started'
         && events.at(-1)?.eventType === 'usability_survey_submitted'
-      if (!validSessionId || !Number.isInteger(ageGroup) || ageGroup < 1 || ageGroup > 4
-        || consent !== true || !validAnswers || !validEvents) {
+      const validComment = comment === undefined
+        || (typeof comment === 'string' && comment.length <= 2000)
+      if (!validSessionId || !Number.isInteger(ageGroup) || ageGroup < 2 || ageGroup > 4
+        || consent !== true || !validAnswers || !validEvents || !validComment) {
         sendJson(response, 400, { error: 'Las respuestas de la encuesta no son válidas.' })
         return
       }
@@ -348,7 +350,8 @@ const server = http.createServer(async (request, response) => {
         'task_completion',
         'overall_satisfaction',
       ]
-      const values = [sessionId, ageGroup, consent, ...usabilitySurveyFields.map((field) => answers[field])]
+      const normalizedComment = typeof comment === 'string' ? comment.trim() || null : null
+      const values = [sessionId, ageGroup, consent, normalizedComment, ...usabilitySurveyFields.map((field) => answers[field])]
       const placeholders = values.map((_, index) => `$${index + 1}`)
       const client = await pool.connect()
       try {
@@ -359,7 +362,7 @@ const server = http.createServer(async (request, response) => {
         )
         const result = await client.query(
           `INSERT INTO usability_test_surveys (
-             session_id, age_group, consent_confirmed, ${fields.join(', ')}
+             session_id, age_group, consent_confirmed, feedback_comment, ${fields.join(', ')}
            ) VALUES (${placeholders.join(', ')})
            ON CONFLICT (session_id) DO NOTHING`,
           values,

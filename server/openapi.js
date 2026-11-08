@@ -313,8 +313,9 @@ const openApiDocument = {
                 type: 'object',
                 properties: {
                   sessionId: { type: 'string', format: 'uuid' },
-                  ageGroup: { type: 'integer', enum: [1, 2, 3, 4], description: '1: menor de 18, 2: 18–29, 3: 30–49, 4: 50 o más' },
-                  consent: { type: 'boolean', enum: [true], description: 'Confirmación de participación voluntaria' },
+                  ageGroup: { type: 'integer', enum: [2, 3, 4], description: '2: 18–29, 3: 30–49, 4: 50 o más' },
+                  consent: { type: 'boolean', enum: [true], description: 'Confirmación de tener 18 años o más y participar voluntariamente' },
+                  comment: { type: 'string', maxLength: 2000, description: 'Comentario opcional; no debe incluir datos personales' },
                   answers: {
                     type: 'object',
                     properties: {

@@ -61,8 +61,10 @@ CREATE TABLE IF NOT EXISTS usability_test_events (
 
 CREATE TABLE IF NOT EXISTS usability_test_surveys (
   session_id UUID PRIMARY KEY REFERENCES usability_test_sessions(session_id) ON DELETE CASCADE,
-  age_group SMALLINT NOT NULL CHECK (age_group BETWEEN 1 AND 4),
+  age_group SMALLINT NOT NULL CONSTRAINT usability_test_surveys_adult_age_group_check CHECK (age_group BETWEEN 2 AND 4),
   consent_confirmed BOOLEAN NOT NULL CHECK (consent_confirmed),
+  feedback_comment TEXT CONSTRAINT usability_test_surveys_feedback_comment_length_check
+    CHECK (feedback_comment IS NULL OR char_length(feedback_comment) <= 2000),
   chatbot_discoverability SMALLINT NOT NULL CHECK (chatbot_discoverability BETWEEN 0 AND 5),
   chatbot_prompting_ease SMALLINT NOT NULL CHECK (chatbot_prompting_ease BETWEEN 0 AND 5),
   chatbot_result_relevance SMALLINT NOT NULL CHECK (chatbot_result_relevance BETWEEN 0 AND 5),
@@ -74,6 +76,31 @@ CREATE TABLE IF NOT EXISTS usability_test_surveys (
   overall_satisfaction SMALLINT NOT NULL CHECK (overall_satisfaction BETWEEN 0 AND 5),
   submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE usability_test_surveys ADD COLUMN IF NOT EXISTS feedback_comment TEXT;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'usability_test_surveys_adult_age_group_check'
+      AND conrelid = 'usability_test_surveys'::regclass
+  ) THEN
+    ALTER TABLE usability_test_surveys
+      ADD CONSTRAINT usability_test_surveys_adult_age_group_check
+      CHECK (age_group BETWEEN 2 AND 4) NOT VALID;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'usability_test_surveys_feedback_comment_length_check'
+      AND conrelid = 'usability_test_surveys'::regclass
+  ) THEN
+    ALTER TABLE usability_test_surveys
+      ADD CONSTRAINT usability_test_surveys_feedback_comment_length_check
+      CHECK (feedback_comment IS NULL OR char_length(feedback_comment) <= 2000) NOT VALID;
+  END IF;
+END $$;
 
 INSERT INTO vehicles (
   id, make, model, year, body_type, fuel_type, transmission, drivetrain,

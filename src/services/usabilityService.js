@@ -17,11 +17,11 @@ export function recordUsabilityEvent(eventType) {
   })
 }
 
-export async function submitUsabilitySurvey(ageGroup, answers) {
+export async function submitUsabilitySurvey(ageGroup, answers, comment = '') {
   const response = await fetch(`${API_URL}/usability/surveys`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionId, ageGroup, consent: true, answers, events }),
+    body: JSON.stringify({ sessionId, ageGroup, consent: true, answers, comment, events }),
   })
   const data = await response.json()
   if (!response.ok) throw new Error(data.error || 'No se pudo guardar la encuesta.')

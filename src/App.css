@@ -817,6 +817,8 @@
 .usability-survey__question > span { font-size: 0.88rem; line-height: 1.5; }
 .usability-survey__question strong { color: var(--color-champagne); margin-right: 4px; }
 .usability-survey__question select { min-height: 42px; }
+.usability-survey__question textarea { width: 100%; min-height: 96px; padding: 12px; resize: vertical; border: 1px solid var(--hairline); background: var(--color-surface-1); color: var(--color-text); font: inherit; font-size: 0.88rem; line-height: 1.5; }
+.usability-survey__question textarea:focus { outline: none; border-color: var(--color-champagne); }
 .usability-survey__consent { display: flex; align-items: flex-start; gap: 10px; padding: 10px 2px; color: var(--color-text-technical); font-size: 0.8rem; line-height: 1.5; }
 .usability-survey__consent input { flex: 0 0 auto; margin-top: 3px; accent-color: var(--color-champagne); }
 .usability-survey__submit { width: 100%; justify-content: center; padding-block: 0.9rem; }
