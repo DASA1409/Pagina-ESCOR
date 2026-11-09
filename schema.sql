@@ -45,19 +45,29 @@ CREATE TABLE IF NOT EXISTS usability_test_events (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   session_id UUID NOT NULL REFERENCES usability_test_sessions(session_id) ON DELETE CASCADE,
   sequence_number INTEGER NOT NULL CHECK (sequence_number > 0),
-  event_type TEXT NOT NULL CHECK (event_type IN (
-    'session_started',
-    'chat_search_submitted',
-    'vehicle_selected',
-    'usability_survey_opened',
-    'usability_survey_closed',
-    'usability_survey_submitted'
-  )),
+  event_type TEXT NOT NULL,
   elapsed_ms INTEGER NOT NULL CHECK (elapsed_ms >= 0),
   interval_ms INTEGER NOT NULL CHECK (interval_ms >= 0),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (session_id, sequence_number)
 );
+
+ALTER TABLE usability_test_events
+  DROP CONSTRAINT IF EXISTS usability_test_events_event_type_check;
+
+ALTER TABLE usability_test_events
+  ADD CONSTRAINT usability_test_events_event_type_check
+  CHECK (event_type IN (
+    'session_started',
+    'catalog_search_submitted',
+    'catalog_filter_changed',
+    'chat_search_submitted',
+    'compare_vehicle_toggled',
+    'vehicle_selected',
+    'usability_survey_opened',
+    'usability_survey_closed',
+    'usability_survey_submitted'
+  ));
 
 CREATE TABLE IF NOT EXISTS usability_test_surveys (
   session_id UUID PRIMARY KEY REFERENCES usability_test_sessions(session_id) ON DELETE CASCADE,
