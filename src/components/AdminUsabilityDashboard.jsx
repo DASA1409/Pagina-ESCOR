@@ -116,20 +116,22 @@ function ChartPanel({ title, filename, svgRef, children }) {
 function RatingDistributionChart({ ratings }) {
   const svgRef = useRef(null)
   const width = 1120
-  const height = 490
+  const height = 470
   const labelWidth = 280
   const barWidth = 540
   const barStart = labelWidth
-  const rowHeight = 38
-  const chartTop = 55
-  const legendTop = chartTop + ratings.length * rowHeight + 20
+  const rowHeight = 36
+  const chartTop = 72
+  const legendTop = chartTop + ratings.length * rowHeight + 16
 
   return (
     <ChartPanel title="Calificación de funciones" filename="escor-calificacion-funciones" svgRef={svgRef}>
       <div className="usability-dashboard__chart">
         <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Distribución de calificaciones por función">
           <rect width={width} height={height} fill="#ffffff" />
-          <text x="20" y="28" fill="#394150" fontSize="16">Distribución de respuestas (número de personas); 0 = no la encontró/no la usó</text>
+          <rect width={width} height="54" fill="#202633" />
+          <text x="22" y="35" fill="#ffffff" fontSize="21" fontWeight="700">Calificación de funciones</text>
+          <text x={width - 22} y="34" textAnchor="end" fill="#e1c27d" fontSize="15">{ratings[0]?.count ?? 0} respuestas</text>
           {ratings.map((rating, index) => {
             const y = chartTop + index * rowHeight
             const denominator = rating.count || 1
@@ -160,7 +162,7 @@ function RatingDistributionChart({ ratings }) {
                   ) : null
                 })}
                 <text x={barStart + barWidth + 18} y={y + 20} fill="#202633" fontSize="14">
-                  {rating.average === null ? 'Sin respuestas' : `${rating.average.toFixed(2)} / 5 · n=${rating.scoredCount}`}
+                  {rating.average === null ? 'Sin respuestas' : `${rating.average.toFixed(2)} de 5 · ${rating.scoredCount} respuestas`}
                 </text>
               </g>
             )
@@ -174,7 +176,6 @@ function RatingDistributionChart({ ratings }) {
               </g>
             )
           })}
-          <text x="20" y={height - 15} fill="#596273" fontSize="12">Los promedios excluyen las respuestas 0. Cada segmento muestra la cantidad de respuestas.</text>
         </svg>
       </div>
     </ChartPanel>
@@ -187,24 +188,28 @@ function AgeDistributionChart({ ageGroups }) {
   const height = 290
   const maxCount = Math.max(1, ...ageGroups.map((group) => group.count))
   const barMaxWidth = 400
+  const participantCount = ageGroups.reduce((total, group) => total + group.count, 0)
 
   return (
     <ChartPanel title="Participantes por grupo de edad" filename="escor-participantes-por-edad" svgRef={svgRef}>
       <div className="usability-dashboard__chart">
         <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Participantes por grupo de edad">
           <rect width={width} height={height} fill="#ffffff" />
+          <rect width={width} height="48" fill="#202633" />
+          <text x="22" y="32" fill="#ffffff" fontSize="19" fontWeight="700">Participantes por grupo de edad</text>
+          <text x={width - 22} y="31" textAnchor="end" fill="#e1c27d" fontSize="14">{participantCount} participantes</text>
           {ageGroups.map((group, index) => {
-            const y = 55 + index * 68
+            const y = 68 + index * 62
             const barWidth = (group.count / maxCount) * barMaxWidth
             return (
               <g key={group.ageGroup}>
                 <text x="24" y={y + 23} fill="#202633" fontSize="17">{AGE_LABELS[group.ageGroup]}</text>
+                <rect x="220" y={y} width={barMaxWidth} height="34" fill="#f0eee9" />
                 <rect x="220" y={y} width={barWidth} height="34" fill="#c5a059" />
-                <text x={230 + barWidth} y={y + 23} fill="#202633" fontSize="17" fontWeight="700">{group.count}</text>
+                <text x="232" y={y + 23} fill="#202633" fontSize="17" fontWeight="700">{group.count}</text>
               </g>
             )
           })}
-          <text x="24" y="270" fill="#596273" fontSize="13">Personas que enviaron la encuesta</text>
         </svg>
       </div>
     </ChartPanel>
@@ -216,28 +221,32 @@ function DurationChart({ durations }) {
   const width = 820
   const height = 350
   const maxSeconds = Math.max(1, ...durations.map((duration) => duration.medianMs / 1000))
-  const barMaxWidth = 460
+  const barMaxWidth = 350
+  const valueX = 635
 
   return (
-    <ChartPanel title="Tiempos medianos de interacción" filename="escor-tiempos-medianos" svgRef={svgRef}>
+    <ChartPanel title="Tiempo típico por etapa" filename="escor-tiempos-interaccion" svgRef={svgRef}>
       <div className="usability-dashboard__chart">
-        <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Tiempos medianos entre hitos de interacción">
+        <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Tiempo típico entre hitos de interacción">
           <rect width={width} height={height} fill="#ffffff" />
+          <rect width={width} height="54" fill="#202633" />
+          <text x="22" y="35" fill="#ffffff" fontSize="20" fontWeight="700">Tiempo típico por etapa</text>
+          <text x={width - 22} y="34" textAnchor="end" fill="#e1c27d" fontSize="14">Segundos</text>
           {durations.map((duration, index) => {
             const seconds = duration.medianMs === null ? 0 : duration.medianMs / 1000
             const barWidth = (seconds / maxSeconds) * barMaxWidth
-            const y = 48 + index * 68
+            const y = 68 + index * 62
             return (
               <g key={duration.key}>
                 <text x="20" y={y + 23} fill="#202633" fontSize="15">{DURATION_LABELS[duration.key]}</text>
+                <rect x="270" y={y} width={barMaxWidth} height="34" fill="#eef1f4" />
                 <rect x="270" y={y} width={barWidth} height="34" fill="#6c8caa" />
-                <text x={280 + barWidth} y={y + 23} fill="#202633" fontSize="15" fontWeight="700">
-                  {duration.medianMs === null ? 'Sin datos' : `${Math.round(seconds)} s · n=${duration.sampleCount}`}
+                <text x={valueX} y={y + 23} fill="#202633" fontSize="15" fontWeight="700">
+                  {duration.medianMs === null ? 'Sin datos' : `${Math.round(seconds)} s · ${duration.sampleCount} sesiones`}
                 </text>
               </g>
             )
           })}
-          <text x="20" y="332" fill="#596273" fontSize="13">Medianas calculadas por sesión; usar como referencia exploratoria.</text>
         </svg>
       </div>
     </ChartPanel>
@@ -308,7 +317,7 @@ export default function AdminUsabilityDashboard({ onBack, onLogin, user, onLogou
           <section className="usability-dashboard__summary" aria-label="Resumen de la encuesta">
             <article><span className="label">Encuestas recibidas</span><strong>{data.surveyCount}</strong></article>
             <article><span className="label">Sesiones con eventos</span><strong>{data.eventSessionCount}</strong></article>
-            <article><span className="label">Satisfacción general</span><strong>{data.ratingDistributions.find((rating) => rating.key === 'overallSatisfaction')?.average?.toFixed(2) ?? '—'}<small> / 5</small></strong></article>
+            <article><span className="label">Satisfacción general</span><strong>{data.ratingDistributions.find((rating) => rating.key === 'overallSatisfaction')?.average?.toFixed(2) ?? '—'}<small> de 5</small></strong></article>
           </section>
           {data.surveyCount === 0 ? (
             <div className="usability-dashboard__notice">Todavía no hay encuestas enviadas.</div>
