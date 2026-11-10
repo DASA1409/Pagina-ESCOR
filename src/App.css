@@ -1067,10 +1067,61 @@
 .navbar__user { border: 0; background: transparent; color: var(--color-text-technical); cursor: pointer; font-size: 0.75rem; }
 .navbar__user:hover { color: var(--color-champagne); }
 .navbar__admin-btn { white-space: nowrap; }
+.admin-access { min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-4); text-align: center; background: var(--color-obsidian); }
+.admin-access p { max-width: 520px; color: var(--color-text-technical); }
+.admin-access > div { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 @media (max-width: 760px) {
   .admin-form { grid-template-columns: 1fr; }
   .admin-form .auth-form__field:last-of-type { grid-column: auto; }
   .navbar__admin-btn { display: none; }
+}
+
+/* Admin usability dashboard */
+.usability-dashboard {
+  min-height: 100svh;
+  padding: clamp(20px, 4vw, 56px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(197, 160, 89, 0.12), transparent 28rem),
+    var(--color-obsidian);
+}
+.usability-dashboard__header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-3); }
+.usability-dashboard__header .label { display: inline-flex; align-items: center; gap: 6px; }
+.usability-dashboard__header h1 { margin: 8px 0; font-size: clamp(2rem, 4vw, 3.2rem); }
+.usability-dashboard__header p, .usability-dashboard__footnote, .usability-dashboard__privacy-note { color: var(--color-text-technical); font-size: 0.86rem; line-height: 1.6; }
+.usability-dashboard__header-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.usability-dashboard__header-actions .btn, .usability-dashboard__exports .btn { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.usability-dashboard__summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-2); }
+.usability-dashboard__summary article { min-width: 0; padding: var(--space-3); border: 1px solid var(--hairline-gold); background: var(--color-surface-1); display: flex; flex-direction: column; gap: 8px; }
+.usability-dashboard__summary strong { font-family: var(--font-serif); color: var(--color-champagne); font-size: 2rem; }
+.usability-dashboard__summary strong small { font-family: var(--font-sans); font-size: 0.9rem; }
+.usability-dashboard__panel { min-width: 0; padding: var(--space-3); border: 1px solid var(--hairline); background: var(--color-surface-1); }
+.usability-dashboard__panel-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: var(--space-2); }
+.usability-dashboard__panel-heading h2, .usability-dashboard__panel > h2 { font-size: 1.2rem; }
+.usability-dashboard__exports { display: flex; gap: 6px; }
+.usability-dashboard__exports .btn { padding: 0.5rem 0.7rem; font-size: 0.75rem; }
+.usability-dashboard__chart { width: 100%; overflow-x: auto; background: #fff; }
+.usability-dashboard__chart svg { display: block; width: 100%; min-width: 640px; height: auto; }
+.usability-dashboard__charts-row { display: grid; grid-template-columns: minmax(240px, 0.8fr) minmax(0, 1.2fr); gap: var(--space-2); align-items: start; }
+.usability-dashboard__charts-row .usability-dashboard__panel { min-width: 0; }
+.usability-dashboard__comments { display: grid; gap: 8px; margin: var(--space-2) 0 0; padding-left: 1.25rem; }
+.usability-dashboard__comments li { padding: 10px; background: var(--color-surface-2); color: var(--color-text); font-size: 0.88rem; line-height: 1.55; }
+.usability-dashboard__notice, .usability-dashboard__error { margin: auto; padding: var(--space-3); max-width: 720px; border: 1px solid var(--hairline); background: var(--color-surface-1); }
+.usability-dashboard__error { color: #e99b8c; }
+.usability-dashboard__error .btn { display: inline-flex; gap: 6px; align-items: center; }
+.usability-dashboard__footnote { margin: 0; }
+@media (max-width: 800px) {
+  .usability-dashboard__header { flex-direction: column; }
+  .usability-dashboard__header-actions { justify-content: flex-start; }
+  .usability-dashboard__charts-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .usability-dashboard__summary { grid-template-columns: 1fr; }
+  .usability-dashboard__panel { padding: 16px; }
+  .usability-dashboard__panel-heading { align-items: flex-start; flex-direction: column; }
+  .usability-dashboard__exports { flex-wrap: wrap; }
 }
 
 /* Chat FAB */

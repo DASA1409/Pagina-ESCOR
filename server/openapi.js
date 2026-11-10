@@ -301,6 +301,36 @@ const openApiDocument = {
         },
       },
     },
+    '/admin/usability': {
+      get: {
+        tags: ['Usabilidad'],
+        summary: 'Obtiene el dashboard de resultados (solo admin)',
+        security: [{ escorSession: [] }],
+        responses: {
+          200: {
+            description: 'Estadísticas agregadas, duraciones medianas y comentarios.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    surveyCount: { type: 'integer' },
+                    eventSessionCount: { type: 'integer' },
+                    surveyOnlyAgeCounts: { type: 'array', items: { type: 'object' } },
+                    ratingDistributions: { type: 'array', items: { type: 'object' } },
+                    durations: { type: 'array', items: { type: 'object' } },
+                    feedbackComments: { type: 'array', items: { type: 'string' } },
+                  },
+                  required: ['surveyCount', 'eventSessionCount', 'surveyOnlyAgeCounts', 'ratingDistributions', 'durations', 'feedbackComments'],
+                },
+              },
+            },
+          },
+          403: errorResponse,
+          500: errorResponse,
+        },
+      },
+    },
     '/usability/surveys': {
       post: {
         tags: ['Usabilidad'],

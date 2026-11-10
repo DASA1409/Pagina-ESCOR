@@ -56,6 +56,17 @@ const usabilitySurveyFields = [
   'taskCompletion',
   'overallSatisfaction',
 ]
+const usabilitySurveyColumns = {
+  chatbotDiscoverability: 'chatbot_discoverability',
+  chatbotPromptingEase: 'chatbot_prompting_ease',
+  chatbotResultRelevance: 'chatbot_result_relevance',
+  catalogNavigation: 'catalog_navigation',
+  vehicleDetailsClarity: 'vehicle_details_clarity',
+  comparisonDiscoverability: 'comparison_discoverability',
+  inventoryVariety: 'inventory_variety',
+  taskCompletion: 'task_completion',
+  overallSatisfaction: 'overall_satisfaction',
+}
 
 const DEFAULT_USERS = [
   { name: 'Administrador ESCOR', email: process.env.ADMIN_EMAIL || 'admin@escor.com', password: process.env.ADMIN_PASSWORD || 'admin123', role: 'admin' },
@@ -135,6 +146,13 @@ function mapVehicle(row) {
 
 function mapUser(row) {
   return { id: row.id, name: row.name, email: row.email, role: row.role }
+}
+
+function median(values) {
+  if (!values.length) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  const middle = Math.floor(sorted.length / 2)
+  return sorted.length % 2 ? sorted[middle] : Math.round((sorted[middle - 1] + sorted[middle]) / 2)
 }
 
 async function getVehicles() {
@@ -390,6 +408,78 @@ const server = http.createServer(async (request, response) => {
         client.release()
       }
       sendJson(response, 201, { ok: true })
+      return
+    }
+
+    if (request.method === 'GET' && requestUrl.pathname === '/api/admin/usability') {
+      response.setHeader('Cache-Control', 'no-store')
+      const user = await getAuthenticatedUser(request)
+      if (!user || user.role !== 'admin') {
+        sendJson(response, 403, { error: 'Se requiere una cuenta admin' })
+        return
+      }
+
+      const [surveyResult, eventResult] = await Promise.all([
+        pool.query(
+          `SELECT age_group, feedback_comment, ${Object.values(usabilitySurveyColumns).join(', ')}
+           FROM usability_test_surveys
+           ORDER BY submitted_at DESC`,
+        ),
+        pool.query(
+          `SELECT session_id,
+             MIN(elapsed_ms) FILTER (WHERE event_type = 'session_started') AS started_ms,
+             MIN(elapsed_ms) FILTER (WHERE event_type = 'vehicle_selected') AS first_vehicle_ms,
+             MIN(elapsed_ms) FILTER (WHERE event_type = 'usability_survey_opened') AS first_survey_opened_ms,
+             MIN(elapsed_ms) FILTER (WHERE event_type = 'usability_survey_submitted') AS first_survey_submitted_ms
+           FROM usability_test_events
+           GROUP BY session_id`,
+        ),
+      ])
+
+      const surveys = surveyResult.rows
+      const ratingDistributions = Object.entries(usabilitySurveyColumns).map(([key, column]) => {
+        const counts = Array(6).fill(0)
+        for (const survey of surveys) counts[Number(survey[column])] += 1
+        const scoredCount = surveys.length - counts[0]
+        const scoreTotal = counts.slice(1).reduce((total, count, index) => total + count * (index + 1), 0)
+        return {
+          key,
+          count: surveys.length,
+          counts,
+          scoredCount,
+          average: scoredCount ? Math.round((scoreTotal / scoredCount) * 100) / 100 : null,
+        }
+      })
+
+      const ageCounts = new Map([[2, 0], [3, 0], [4, 0]])
+      for (const survey of surveys) {
+        const ageGroup = Number(survey.age_group)
+        ageCounts.set(ageGroup, (ageCounts.get(ageGroup) || 0) + 1)
+      }
+
+      const eventSessions = eventResult.rows
+      const elapsedFor = (startField, endField) => eventSessions
+        .filter((session) => session[startField] !== null && session[endField] !== null)
+        .map((session) => Math.max(0, Number(session[endField]) - Number(session[startField])))
+      const durations = [
+        { key: 'vehicleSelection', values: elapsedFor('started_ms', 'first_vehicle_ms') },
+        { key: 'surveyOpen', values: elapsedFor('started_ms', 'first_survey_opened_ms') },
+        { key: 'surveyCompletion', values: elapsedFor('first_survey_opened_ms', 'first_survey_submitted_ms') },
+        { key: 'total', values: elapsedFor('started_ms', 'first_survey_submitted_ms') },
+      ].map(({ key, values }) => ({
+        key,
+        sampleCount: values.length,
+        medianMs: median(values),
+      }))
+
+      sendJson(response, 200, {
+        surveyCount: surveys.length,
+        surveyOnlyAgeCounts: [2, 3, 4].map((ageGroup) => ({ ageGroup, count: ageCounts.get(ageGroup) })),
+        ratingDistributions,
+        durations,
+        feedbackComments: surveys.map((survey) => survey.feedback_comment?.trim()).filter(Boolean),
+        eventSessionCount: eventSessions.length,
+      })
       return
     }
 
